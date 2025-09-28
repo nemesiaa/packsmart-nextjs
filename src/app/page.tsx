@@ -1,102 +1,141 @@
-import Image from "next/image";
+import Header from "@/components/Header";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <Header />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Hero Section */}
+      <section className="bg-yellow-400 text-gray-900 px-8 py-20">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex-1 max-w-2xl">
+            <h1 className="text-5xl font-bold mb-6 leading-tight">
+              Préparez votre prochaine
+              <br />
+              aventure en toute sérénité
+            </h1>
+            <p className="text-lg mb-8 leading-relaxed">
+              PackSmart vous accompagne pour faire vos bagages intelligemment,
+              en générant des listes personnalisées selon votre destination,
+              votre style de voyage et vos préférences personnelles.
+            </p>
+            <button className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+              Commencer
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <div className="text-9xl">🎒</div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      {/* Features Section */}
+      <section className="px-8 py-20">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-16">
+            Fonctionnalités principales
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Feature 1 */}
+            <div className="text-center p-8 bg-gray-800 border border-gray-700 rounded-xl hover:border-yellow-400 transition-all duration-300 hover:shadow-xl hover:shadow-yellow-400/20">
+              <div className="text-5xl text-yellow-400 mb-6">📋</div>
+              <h3 className="text-xl font-bold mb-4 text-white">
+                Checklist intelligente
+              </h3>
+              <p className="text-gray-300 leading-relaxed text-sm">
+                Générez automatiquement la liste idéale pour votre sac selon la
+                destination, la saison et le type de voyage.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="text-center p-8 bg-gray-800 border border-gray-700 rounded-xl hover:border-yellow-400 transition-all duration-300 hover:shadow-xl hover:shadow-yellow-400/20">
+              <div className="text-5xl text-yellow-400 mb-6">🧳</div>
+              <h3 className="text-xl font-bold mb-4 text-white">
+                Gestion de voyages
+              </h3>
+              <p className="text-gray-300 leading-relaxed text-sm">
+                Créez, modifiez et sauvegardez vos voyages et sacs personnalisés
+                pour chaque aventure.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="text-center p-8 bg-gray-800 border border-gray-700 rounded-xl hover:border-yellow-400 transition-all duration-300 hover:shadow-xl hover:shadow-yellow-400/20">
+              <div className="text-5xl text-yellow-400 mb-6">⚖️</div>
+              <h3 className="text-xl font-bold mb-4 text-white">
+                Calcul du poids & alertes
+              </h3>
+              <p className="text-gray-300 leading-relaxed text-sm">
+                Suivez le poids total de votre sac et recevez des alertes en cas
+                de dépassement du poids maximal autorisé.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="text-center p-8 bg-gray-800 border border-gray-700 rounded-xl hover:border-yellow-400 transition-all duration-300 hover:shadow-xl hover:shadow-yellow-400/20">
+              <div className="text-5xl text-yellow-400 mb-6">🌤️</div>
+              <h3 className="text-xl font-bold mb-4 text-white">
+                Suggestions IA & météo
+              </h3>
+              <p className="text-gray-300 leading-relaxed text-sm">
+                Profitez de conseils personnalisés grâce à l'IA et adaptez votre
+                checklist à la météo en temps réel.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 px-8 py-12">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Logo & Description */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">🎒</span>
+              <span className="text-xl font-bold text-yellow-400">
+                PackSmart
+              </span>
+            </div>
+            <p className="text-gray-400 text-sm mb-2">
+              Application Node.js avec TypeScript, Express et Prisma.
+            </p>
+            <p className="text-gray-400 text-sm">
+              Architecture MVC moderne et performante.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 className="font-bold mb-4">Liens rapides</h4>
+            <ul className="space-y-2">
+              <li>
+                <a href="#" className="text-gray-400 hover:text-white text-sm">
+                  Accueil
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-400 hover:text-white text-sm">
+                  Dashboard
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Social Links - Section supprimée comme demandé */}
+          <div>
+            <p className="text-gray-500 text-sm">Fait avec TypeScript</p>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-700 mt-8 pt-8 text-center">
+          <p className="text-gray-500 text-sm">
+            © 2025 Nina App. Tous droits réservés.
+          </p>
+        </div>
       </footer>
     </div>
   );
