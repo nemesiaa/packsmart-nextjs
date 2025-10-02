@@ -1,26 +1,108 @@
+/* src/app/globals.css */
+
+/* Tailwind (v4) */
 @import "tailwindcss";
 
+/* ====== Variables de thème ====== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* tes variables existantes */
+  --background: #0a0a0a;   /* app sombre par défaut */
+  --foreground: #ededed;
+
+  /* palette rose */
+  --rose: #b48ead;         /* rose principal = header */
+  --rose-hover: #a3749b;   /* légèrement plus foncé au hover */
+  --rose-bright: #f472b6;  /* rose vif pour icônes / accents */
+
+  /* surfaces */
+  --anthracite: #2a2d34;
+  --anthracite-2: #1E151F;
+  --card: #3021317a;
+
+  /* texte */
+  --text-soft: #f5f5f7;
+  --text-subtle: #f8e7f4;
+
+  --footer-bg: #332235;          /* fond du footer */
+  --footer-border: var(--rose);  /* bordure haute */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
+/* ====== Base ====== */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ====== Composants réutilisables ====== */
+@layer components {
+  /* Header background so it’s visible over the hero */
+  .site-header { background-color: #1E151F; }
+
+  .site-footer      { background-color: var(--footer-bg); border-top: 1px solid var(--footer-border); }
+  .site-footer__in  { @apply px-8 py-12; }
+  .site-footer__grid{ @apply max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8; }
+  .site-footer__bot { @apply border-t border-gray-700 mt-8 pt-8 text-center; }
+  /* Hero fixes: create stacking context + order layers properly */
+  .hero { @apply relative min-h-[60vh] flex items-center px-8 py-20 overflow-hidden isolate; }
+  .hero__bg { @apply absolute inset-0 z-0; }              /* was -z-10 */
+  .hero__content { @apply relative z-10 max-w-2xl; }      /* content above bg/overlays */
+  /* Page wrapper */
+  .page { @apply min-h-screen; background-color: var(--anthracite); color: var(--text-soft); }
+
+  /* Conteneur max-width */
+  .container { @apply max-w-6xl mx-auto w-full; }
+
+  /* -------- Hero -------- */
+  .hero { @apply relative min-h-[60vh] flex items-center px-8 py-20 overflow-hidden isolate; }
+  .hero__bg { @apply absolute inset-0 z-0; }
+  .hero__img { @apply object-cover scale-105; }
+  .hero__shade { @apply absolute inset-0; background: rgba(0,0,0,.22); } /* lisibilité texte */
+  .hero__tint { @apply absolute inset-0; background: linear-gradient(135deg, color-mix(in oklab, var(--rose) 12%, transparent) 0%, transparent 55%, color-mix(in oklab, var(--rose) 9%, transparent) 100%); }
+  .hero__vignette { @apply absolute inset-0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.28) 100%); }
+
+  .hero__content { @apply relative z-10 max-w-2xl; }
+  .hero__title { @apply text-5xl font-bold mb-6 leading-tight; }
+  .hero__lead { @apply text-lg mb-8 leading-relaxed; color: var(--text-subtle); }
+
+  /* Bouton rose */
+  .btn-rose {
+    @apply inline-block px-8 py-3 rounded-lg font-semibold border-2 transition-colors;
+    background-color: var(--rose);
+    border-color: var(--rose);
+    color: var(--text-soft);
+  }
+  .btn-rose:hover { background-color: var(--rose-hover); }
+
+  /* -------- Sections -------- */
+  .section-dark { @apply px-8 py-20; background-color: var(--anthracite-2); }
+  .section-title { @apply text-3xl font-bold text-center mb-16; }
+
+  /* -------- Cards -------- */
+  .cards-grid { @apply grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto; }
+
+  .card {
+    @apply text-center p-8 rounded-xl border transition-all duration-300 transform;
+    background-color: var(--card);
+    border-color: var(--rose);
+  }
+  .card--rose:hover {
+    @apply -translate-y-0.5;
+    box-shadow: 0 12px 38px 0 rgba(180, 142, 173, 0.35);
+    border-color: var(--rose-hover);
+  }
+  .card__icon { @apply text-5xl mb-6; }
+  .card__title { @apply text-xl font-bold mb-4; }
+  .card__text { @apply leading-relaxed text-sm; color: var(--text-subtle); }
+
+  /* -------- Utils couleurs -------- */
+  .text-rose { color: var(--rose); }
+  .icon-rose-bright { color: var(--rose-bright); }
 }
