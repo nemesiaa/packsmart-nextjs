@@ -21,7 +21,7 @@ export default function Header() {
 
   return (
     // sticky + z-50 to stay above the hero at all times
-    <header className="site-header sticky top-0 z-50 flex justify-between items-center px-8 py-4">
+    <header className="site-header sticky top-0 z-50 flex justify-between items-center px-8 py-4 border-b border-b-pink-200/60">
       <div className="flex items-center gap-2">
         <span className="text-xl font-bold" style={{ color: ROSE }}>PackSmart</span>
       </div>
