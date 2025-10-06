@@ -1,7 +1,7 @@
 // src/components/footer.tsx
 export default function Footer() {
   return (
-    <footer className="site-footer">
+    <footer className="site-footer bg-ui-base border-t border-ui-border">
       <div className="site-footer__in">
         <div className="site-footer__grid">
           {/* colonne 1 */}

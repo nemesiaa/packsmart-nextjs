@@ -43,7 +43,8 @@ export default function Home() {
       <Header />
 
       {/* ============== HERO ============== */}
-      <section className="hero">
+      <section className="hero hero--pull
+    ">
         {/* Image + overlays (z-0) */}
         <div className="hero__bg" aria-hidden>
           <Image
@@ -54,6 +55,7 @@ export default function Home() {
             sizes="100vw"
             className="hero__img"
           />
+          <div className="hero__topfade" /> 
           <div className="hero__shade" />
           <div className="hero__tint" />
           <div className="hero__vignette" />

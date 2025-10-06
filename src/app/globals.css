@@ -1,30 +1,42 @@
 /* src/app/globals.css */
 
-/* Tailwind (v4) */
+/* Tailwind v4 */
 @import "tailwindcss";
 
-/* ====== Variables de thème ====== */
+/* =========================
+   Thème & variables globales
+   ========================= */
 :root {
-  /* tes variables existantes */
-  --background: #0a0a0a;   /* app sombre par défaut */
+  /* Mode sombre par défaut */
+  --background: #0a0a0a;
   --foreground: #ededed;
 
-  /* palette rose */
-  --rose: #b48ead;         /* rose principal = header */
-  --rose-hover: #a3749b;   /* légèrement plus foncé au hover */
-  --rose-bright: #f472b6;  /* rose vif pour icônes / accents */
+  /* Palette rose */
+  --rose: #b48ead;        /* couleur principale (header/accents) */
+  --rose-hover: #a3749b;  /* hover / focus */
+  --rose-bright: #f472b6; /* accents vifs (icônes) */
 
-  /* surfaces */
-  --anthracite: #2a2d34;
-  --anthracite-2: #1E151F;
-  --card: #3021317a;
+  /* Surfaces */
+  --anthracite:   #2a2d34;
+  --anthracite-2: #1E151F;         /* sections sombres */
+  --card:         #3021317a;
 
-  /* texte */
-  --text-soft: #f5f5f7;
+  /* Texte */
+  --text-soft:   #f5f5f7;
   --text-subtle: #f8e7f4;
 
-  --footer-bg: #332235;          /* fond du footer */
-  --footer-border: var(--rose);  /* bordure haute */
+  /* Footer */
+  --footer-bg:     #332235;
+  --footer-border: var(--rose);
+
+  /* UI génériques (pour les classes utilitaires) */
+  --ui-base:    #0f0f12;
+  --ui-surface: #1E151F;
+  --ui-border:  rgba(255,255,255,0.12);
+
+  /* Offsets & ajustements layout */
+  --header-offset: 1.5rem;   /* = top-6 */
+  --hero-overscan-top: 48px; /* combien on “remonte” l’image au-dessus du hero */
 }
 
 @media (prefers-color-scheme: light) {
@@ -41,38 +53,122 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ====== Composants réutilisables ====== */
+/* =========================
+   Composants & utilitaires
+   ========================= */
 @layer components {
-  /* Header background so it’s visible over the hero */
-  .site-header { background-color: #1E151F; }
+  /* --- utilitaires couleurs/borders manquants (utilisés dans le header) --- */
+  .bg-ui-base     { background-color: var(--ui-base); }
+  .bg-ui-surface  { background-color: var(--ui-surface); }
+  .border-ui-border { border-color: var(--ui-border); }
+  .text-textSoft  { color: var(--text-soft); }
 
+  /* --- Footer --- */
   .site-footer      { background-color: var(--footer-bg); border-top: 1px solid var(--footer-border); }
   .site-footer__in  { @apply px-8 py-12; }
   .site-footer__grid{ @apply max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8; }
   .site-footer__bot { @apply border-t border-gray-700 mt-8 pt-8 text-center; }
-  /* Hero fixes: create stacking context + order layers properly */
-  .hero { @apply relative min-h-[60vh] flex items-center px-8 py-20 overflow-hidden isolate; }
-  .hero__bg { @apply absolute inset-0 z-0; }              /* was -z-10 */
-  .hero__content { @apply relative z-10 max-w-2xl; }      /* content above bg/overlays */
-  /* Page wrapper */
-  .page { @apply min-h-screen; background-color: var(--anthracite); color: var(--text-soft); }
 
-  /* Conteneur max-width */
+  /* --- Page wrapper & container --- */
+  .page { @apply min-h-screen; background-color: var(--anthracite); color: var(--text-soft); }
   .container { @apply max-w-6xl mx-auto w-full; }
 
-  /* -------- Hero -------- */
-  .hero { @apply relative min-h-[60vh] flex items-center px-8 py-20 overflow-hidden isolate; }
-  .hero__bg { @apply absolute inset-0 z-0; }
-  .hero__img { @apply object-cover scale-105; }
-  .hero__shade { @apply absolute inset-0; background: rgba(0,0,0,.22); } /* lisibilité texte */
-  .hero__tint { @apply absolute inset-0; background: linear-gradient(135deg, color-mix(in oklab, var(--rose) 12%, transparent) 0%, transparent 55%, color-mix(in oklab, var(--rose) 9%, transparent) 100%); }
-  .hero__vignette { @apply absolute inset-0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.28) 100%); }
+  /* =========================
+     HERO (image de couverture)
+     ========================= */
+  .hero {
+    @apply relative min-h-[60vh] flex items-center px-8 py-20 overflow-hidden isolate;
+  }
 
+  /* On étire le fond ET on le remonte pour qu’il passe derrière le header,
+     en évitant les “lignes” de joint (overscan de 1–2px sur les bords). */
+  .hero__bg {
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    top: calc(-1px - var(--hero-overscan-top)); /* ← remonte l’image au-dessus */
+    z-index: 0;
+  }
+
+  /* Image : couvre à coup sûr + focus un peu plus haut + légère remontée */
+  .hero__img {
+    object-fit: cover;
+    object-position: 50% 40%;
+    transform: translateY(-8px) scale(1.06);
+  }
+
+  /* Overlays (lecture + ton rosé + vignette + fondu haut) */
+  .hero__shade    { @apply absolute inset-0; background: rgba(0,0,0,.22); pointer-events: none; }
+  .hero__tint     { @apply absolute inset-0; background: linear-gradient(135deg,
+                        color-mix(in oklab, var(--rose) 12%, transparent) 0%,
+                        transparent 55%,
+                        color-mix(in oklab, var(--rose) 9%, transparent) 100%
+                      );
+                    pointer-events: none; }
+  .hero__vignette { @apply absolute inset-0; background: radial-gradient(ellipse at center,
+                        rgba(0,0,0,0) 0%,
+                        rgba(0,0,0,0) 55%,
+                        rgba(0,0,0,0.28) 100%
+                      );
+                    pointer-events: none; }
+
+  /* Fondu sombre en haut pour une lecture nickel du header flottant */
+  .hero__topfade {
+    @apply absolute inset-x-0 top-0 z-[1];
+    height: 10rem; /* ~ h-40 ; adapte si besoin */
+    background: linear-gradient(to bottom,
+      rgba(0,0,0,0.45) 0%,
+      rgba(0,0,0,0.28) 45%,
+      rgba(0,0,0,0.00) 100%
+    );
+    pointer-events: none;
+  }
+
+    .hero__bottomfade {
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;   /* -1px pour tuer tout joint */
+    height: 7rem;                       /* ajuste 5–10rem selon goût */
+    z-index: 1;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0.25) 45%,
+      var(--anthracite-2) 90%,
+      var(--anthracite-2) 100%
+    );
+    pointer-events: none;
+  }
+
+    .hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;                  /* chevauche 2px en dessous */
+    height: 4px;                   /* marge de sécurité (dessus+dessous) */
+    background: var(--anthracite-2);  /* même couleur que .section-dark */
+    z-index: 5;                    /* au-dessus du fond du hero */
+    pointer-events: none;
+  }
+
+  /* (option) Faire chevaucher la section suivante de 24px */
+  .section-overlap {
+    margin-top: -24px;                           /* chevauche le hero */
+    padding-top: calc(5rem + 24px);              /* py-20 + overlap */
+  }
+
+  /* Contenu au-dessus (texte + CTA) */
   .hero__content { @apply relative z-10 max-w-2xl; }
-  .hero__title { @apply text-5xl font-bold mb-6 leading-tight; }
-  .hero__lead { @apply text-lg mb-8 leading-relaxed; color: var(--text-subtle); }
+  .hero__title   { @apply text-5xl font-bold mb-6 leading-tight; }
+  .hero__lead    { @apply text-lg mb-8 leading-relaxed; color: var(--text-subtle); }
 
-  /* Bouton rose */
+  /* Décalage “pull” pour compenser le header sticky (top = --header-offset) */
+  .hero--pull { margin-top: calc(var(--header-offset) * -1); }
+
+  /* =========================
+     Boutons / Sections / Cards
+     ========================= */
   .btn-rose {
     @apply inline-block px-8 py-3 rounded-lg font-semibold border-2 transition-colors;
     background-color: var(--rose);
@@ -81,11 +177,9 @@ body {
   }
   .btn-rose:hover { background-color: var(--rose-hover); }
 
-  /* -------- Sections -------- */
   .section-dark { @apply px-8 py-20; background-color: var(--anthracite-2); }
   .section-title { @apply text-3xl font-bold text-center mb-16; }
 
-  /* -------- Cards -------- */
   .cards-grid { @apply grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto; }
 
   .card {
@@ -98,11 +192,107 @@ body {
     box-shadow: 0 12px 38px 0 rgba(180, 142, 173, 0.35);
     border-color: var(--rose-hover);
   }
-  .card__icon { @apply text-5xl mb-6; }
+  .card__icon  { @apply text-5xl mb-6; color: var(--rose-bright); }
   .card__title { @apply text-xl font-bold mb-4; }
-  .card__text { @apply leading-relaxed text-sm; color: var(--text-subtle); }
+  .card__text  { @apply leading-relaxed text-sm; color: var(--text-subtle); }
 
-  /* -------- Utils couleurs -------- */
-  .text-rose { color: var(--rose); }
+  /* Utils couleur */
+  .text-rose        { color: var(--rose); }
   .icon-rose-bright { color: var(--rose-bright); }
 }
+
+/* dashboard */
+
+.dash { @apply relative isolate; }
+
+  /* Fond “aurora” rosé/violet (léger, sans bruit visuel) */
+  .dash__bg{
+    position:absolute; inset:0; z-index:-1;
+    background:
+      radial-gradient(28rem 28rem at 15% 0%,
+        color-mix(in oklab, var(--rose) 18%, transparent) 0%,
+        transparent 60%) ,
+      radial-gradient(22rem 22rem at 85% 12%,
+        color-mix(in oklab, #a78bfa 16%, transparent) 0%,
+        transparent 55%) ,
+      radial-gradient(26rem 26rem at 50% 100%,
+        color-mix(in oklab, var(--rose-bright) 14%, transparent) 0%,
+        transparent 60%) ,
+      linear-gradient(180deg,#0f0f14 0%, #17131d 100%);
+    filter: saturate(1.04) contrast(1.03);
+  }
+
+  /* Panneaux génériques du dashboard (cards “contenu”) */
+  .panel {
+    @apply rounded-2xl border transition-all duration-300;
+    background: color-mix(in oklab, var(--ui-surface) 82%, black 0%);
+    border-color: rgba(255,255,255,.08);
+    box-shadow: 0 8px 26px rgba(0,0,0,.28);
+  }
+  .panel:hover { box-shadow: 0 16px 40px rgba(180,142,173,.18); }
+
+  /* Rangée KPI (grid responsive) */
+  .kpis { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6; }
+
+  /* Base KPI */
+  .kpi {
+    @apply relative overflow-hidden rounded-2xl px-6 py-4 text-white;
+    box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .kpi::after{
+    content:""; position:absolute; inset:-1px; border-radius: inherit; pointer-events:none;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  .kpi__label { @apply text-xs opacity-80; }
+  .kpi__num   { @apply text-3xl font-bold leading-none mt-1; }
+
+  /* Variantes KPI alignées à ta charte (lilas/orchidée/prune) */
+  .kpi--lilac{
+    background:
+      radial-gradient(80% 120% at 100% 0%, rgba(255,255,255,.16), transparent 55%),
+      linear-gradient(180deg,
+        color-mix(in oklab, var(--rose) 85%, white 10%) 0%,
+        color-mix(in oklab, var(--rose) 55%, black 10%) 100%);
+  }
+  .kpi--orchid{
+    background:
+      radial-gradient(90% 120% at 0% 0%, rgba(255,255,255,.16), transparent 55%),
+      linear-gradient(180deg,
+        color-mix(in oklab, #d084c8 80%, white 8%) 0%,
+        color-mix(in oklab, #9e63a6 70%, black 12%) 100%);
+  }
+  .kpi--plum{
+    background:
+      radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,.10), transparent 60%),
+      linear-gradient(180deg,
+        color-mix(in oklab, #7b5ba4 78%, white 6%) 0%,
+        color-mix(in oklab, #4b3965 70%, black 12%) 100%);
+  }
+
+  /* Boutons “fantôme” harmonisés */
+  .btn-ghost{
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm transition-all;
+    color: var(--text-soft);
+    border: 1px solid rgba(255,255,255,.16);
+    background: color-mix(in oklab, var(--ui-surface) 70%, transparent);
+  }
+  .btn-ghost:hover{ background: color-mix(in oklab, var(--rose) 14%, transparent); border-color: color-mix(in oklab, var(--rose) 30%, white 0%); }
+
+  .card-tint-rose { position: relative; overflow: hidden; border-radius: 1rem; }
+  .card-tint-rose::before{
+    content:""; position:absolute; inset:-1px; border-radius: inherit; pointer-events:none;
+    background:
+      radial-gradient(120% 160% at 0% 0%, color-mix(in oklab, var(--rose) 28%, transparent) 0%, transparent 60%),
+      linear-gradient(180deg, color-mix(in oklab, var(--rose) 18%, transparent) 0%, color-mix(in oklab, var(--rose) 10%, transparent) 100%);
+    opacity: 0; transition: opacity .25s ease;
+  }
+  .card-tint-rose:hover::before { opacity: .18; } /* intensité de la teinte au hover */
+
+/* =========================
+   Tipps d’usage :
+   - Si tu changes le header en top-8, mets:
+       :root { --header-offset: 1.5rem; }
+   - Pour remonter encore plus l’image derrière le header :
+       :root { --hero-overscan-top: 80px; }  (ou 80px)
+   ========================= */
