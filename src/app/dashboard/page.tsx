@@ -1,12 +1,10 @@
 // src/app/dashboard/page.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-
-// Modales (minuscules comme chez toi)
 import TripModal from "@/components/modals/tripmodal";
 import BagModal from "@/components/modals/bagmodal";
 import AIModal from "@/components/modals/aimodal";
@@ -16,65 +14,94 @@ type ModalType = "trip" | "bag" | "ai" | null;
 export default function Dashboard() {
   const router = useRouter();
 
-  // --- state de page (inchangé visuellement) ---
+  // State principal
   const [user, setUser] = useState<any>(null);
-  const [stats, setStats] = useState({
-    totalTrips: 0,
-    totalPackages: 0,
-    completedChecklists: 0,
-  });
   const [modal, setModal] = useState<ModalType>(null);
-
-  // --- liste des packages pour la modale IA ---
+  const [trips, setTrips] = useState<any[]>([]);
+  const [checklists, setChecklists] = useState<any[]>([]);
   const [packagesList, setPackagesList] = useState<any[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
+  const [stats, setStats] = useState({ totalTrips: 0, totalPackages: 0, completedChecklists: 0 });
 
-  // Bouton rose réutilisable (tes classes d’avant)
+  // Ancres pour scroller depuis les KPI
+  const tripsRef = useRef<HTMLDivElement | null>(null);
+  const bagsRef = useRef<HTMLDivElement | null>(null);
+  const checksRef = useRef<HTMLDivElement | null>(null);
+
   const btnRose = useMemo(
     () =>
-      "w-full rounded-xl border border-rose text-rose bg-ui-base " +
-      "py-3 px-6 font-semibold transition-all duration-200 " +
-      "hover:bg-rose/10 hover:shadow-[0_8px_30px_rgba(244,114,182,0.18)] hover:-translate-y-0.5 " +
-      "focus:outline-none focus:ring-2 focus:ring-rose/40",
+      "w-full rounded-xl border border-rose text-rose bg-ui-base py-3 px-6 font-semibold transition-all " +
+      "hover:bg-rose/10 hover:shadow-[0_8px_30px_rgba(244,114,182,0.18)] hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-rose/40",
     []
   );
 
-  // Charge user + démo stats (comme avant)
+  // Init (user + local)
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (!userData) {
       router.push("/login");
       return;
     }
-    setUser(JSON.parse(userData));
-    setStats({ totalTrips: 3, totalPackages: 5, completedChecklists: 8 }); // démo
+    const u = JSON.parse(userData);
+    setUser(u);
+    setTrips(JSON.parse(localStorage.getItem("trips") || "[]") || []);
+    setChecklists(JSON.parse(localStorage.getItem("checklists") || "[]") || []);
   }, [router]);
 
-  // Fetch des packages UNIQUEMENT quand la modale IA s’ouvre
+  // Fetch sacs
   useEffect(() => {
-    if (modal !== "ai" || !user?.id) return;
-
+    if (!user?.id) return;
     let cancelled = false;
     (async () => {
       try {
         setLoadingPackages(true);
         const res = await fetch(`/api/packages?userId=${user.id}`, { cache: "no-store" });
         const data = await res.json();
-        if (!cancelled) setPackagesList(data.packages ?? []);
-      } catch (e) {
-        console.error("fetch /api/packages:", e);
+        if (!cancelled) setPackagesList(Array.isArray(data.packages) ? data.packages : []);
+      } catch {
         if (!cancelled) setPackagesList([]);
       } finally {
         if (!cancelled) setLoadingPackages(false);
       }
     })();
-
     return () => {
       cancelled = true;
     };
-  }, [modal, user?.id]);
+  }, [user?.id]);
 
-  // Ouvrir / fermer modales (avec retour navigateur)
+  // Refetch automatique après création / MAJ d’un sac
+  useEffect(() => {
+    const refetch = async (userId?: number) => {
+      if (!userId) return;
+      try {
+        setLoadingPackages(true);
+        const res = await fetch(`/api/packages?userId=${userId}`, { cache: "no-store" });
+        const data = await res.json();
+        setPackagesList(Array.isArray(data.packages) ? data.packages : []);
+      } finally {
+        setLoadingPackages(false);
+      }
+    };
+    const onCreated = () => refetch(user?.id);
+    const onUpdated = () => refetch(user?.id);
+    window.addEventListener("packsmart:bag:created", onCreated);
+    window.addEventListener("packsmart:bag:updated", onUpdated);
+    return () => {
+      window.removeEventListener("packsmart:bag:created", onCreated);
+      window.removeEventListener("packsmart:bag:updated", onUpdated);
+    };
+  }, [user?.id]);
+
+  // KPI dynamiques
+  useEffect(() => {
+    setStats({
+      totalTrips: trips.length,
+      totalPackages: packagesList.length,
+      completedChecklists: checklists.filter((c: any) => c?.done).length,
+    });
+  }, [trips, packagesList, checklists]);
+
+  // Modales
   const handlePopstateOnce = () => setModal(null);
   const openModal = (type: Exclude<ModalType, null>) => {
     setModal(type);
@@ -91,11 +118,15 @@ export default function Dashboard() {
     }
   };
 
-  // Incrémente le compteur voyages quand on crée un voyage
-  const handleTripCreated = () =>
-    setStats((s) => ({ ...s, totalTrips: s.totalTrips + 1 }));
+  // Actions
+  const goToTrips = () => tripsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const goToBags = () => bagsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const goToChecks = () => checksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const handleTripCreated = () => {
+    const list = JSON.parse(localStorage.getItem("trips") || "[]");
+    setTrips(Array.isArray(list) ? list : []);
+  };
 
-  // Loading initial
   if (!user) {
     return (
       <div className="min-h-screen bg-ui-base flex items-center justify-center">
@@ -109,26 +140,20 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-ui-base text-textSoft relative isolate dash">
-      {/* fond aurora si présent dans tes styles */}
       <div className="dash__bg" aria-hidden />
-
       <Header />
 
       <main className="px-6 lg:px-8 py-10">
         <div className="mx-auto max-w-7xl">
           {/* Titre */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2 text-rose">
-              Bienvenue, {user.name || user.email} ! 👋
-            </h1>
-            <p className="text-textSoft/70 text-lg">
-              Gérez vos voyages et préparez vos bagages intelligemment
-            </p>
+            <h1 className="text-4xl font-bold mb-2 text-rose">Bienvenue, {user.name || user.email} ! 👋</h1>
+            <p className="text-textSoft/70 text-lg">Gérez vos voyages et préparez vos bagages intelligemment</p>
           </div>
 
-          {/* === Statistiques (tes classes d’avant : bleu / vert / violet) === */}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="kpi kpi--lilac p-6">
+          {/* KPI cliquables */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <button onClick={goToTrips} className="kpi kpi--lilac p-6 text-left">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="kpi__label">Total Voyages</p>
@@ -136,9 +161,9 @@ export default function Dashboard() {
                 </div>
                 <div className="text-4xl opacity-90">✈️</div>
               </div>
-            </div>
+            </button>
 
-            <div className="kpi kpi--orchid p-6">
+            <button onClick={goToBags} className="kpi kpi--orchid p-6 text-left">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="kpi__label">Mes Sacs</p>
@@ -146,9 +171,9 @@ export default function Dashboard() {
                 </div>
                 <div className="text-4xl opacity-90">🧳</div>
               </div>
-            </div>
+            </button>
 
-            <div className="kpi kpi--plum p-6">
+            <button onClick={goToChecks} className="kpi kpi--plum p-6 text-left">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="kpi__label">Checklists</p>
@@ -156,89 +181,127 @@ export default function Dashboard() {
                 </div>
                 <div className="text-4xl opacity-90">📋</div>
               </div>
-            </div>
+            </button>
           </div>
 
-
-          {/* === 3 cartes d’action (tes classes d’avant) === */}
+          {/* Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <div className="bg-ui-surface border border-ui-border p-8 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:border-rose hover:shadow-xl hover:shadow-rose/20 hover:bg-[#b48ead26] group">
+            <div className="bg-ui-surface border border-ui-border p-8 rounded-2xl transition-all hover:-translate-y-0.5 hover:border-rose hover:shadow-xl hover:shadow-rose/20 hover:bg-[#b48ead26] group">
               <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">✈️</div>
               <h3 className="text-2xl font-bold mb-4 text-textSoft">Nouveau Voyage</h3>
-              <p className="text-textSoft/70 mb-6 leading-relaxed">
-                Planifiez votre prochaine aventure et générez automatiquement vos listes de bagages
-              </p>
-              <button className={btnRose} onClick={() => openModal("trip")}>
-                Créer un voyage
-              </button>
+              <p className="text-textSoft/70 mb-6 leading-relaxed">Planifiez votre prochaine aventure et générez automatiquement vos listes de bagages</p>
+              <button className={btnRose} onClick={() => openModal("trip")}>Créer un voyage</button>
             </div>
 
-            <div className="bg-ui-surface border border-ui-border p-8 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:border-rose hover:shadow-xl hover:shadow-rose/20 hover:bg-[#b48ead26] group">
+            <div className="bg-ui-surface border border-ui-border p-8 rounded-2xl transition-all hover:-translate-y-0.5 hover:border-rose hover:shadow-xl hover:shadow-rose/20 hover:bg-[#b48ead26] group">
               <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">🧳</div>
               <h3 className="text-2xl font-bold mb-4 text-textSoft">Mes Sacs</h3>
-              <p className="text-textSoft/70 mb-6 leading-relaxed">
-                Organisez et personnalisez vos différents types de bagages selon vos besoins
-              </p>
-              <button className={btnRose} onClick={() => openModal("bag")}>
-                Gérer les sacs
-              </button>
+              <p className="text-textSoft/70 mb-6 leading-relaxed">Organisez et personnalisez vos différents types de bagages selon vos besoins</p>
+              <button className={btnRose} onClick={() => openModal("bag")}>Créer un sac</button>
             </div>
 
-            <div className="bg-ui-surface border border-ui-border p-8 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:border-rose hover:shadow-xl hover:shadow-rose/20 hover:bg-[#b48ead26] group">
+            <div className="bg-ui-surface border border-ui-border p-8 rounded-2xl transition-all hover:-translate-y-0.5 hover:border-rose hover:shadow-xl hover:shadow-rose/20 hover:bg-[#b48ead26] group">
               <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">🤖</div>
               <h3 className="text-2xl font-bold mb-4 text-textSoft">IA Assistant</h3>
-              <p className="text-textSoft/70 mb-6 leading-relaxed">
-                Générez des suggestions personnalisées basées sur la météo et votre destination
-              </p>
-              <button className={btnRose} onClick={() => openModal("ai")}>
-                Demander conseil
+              <p className="text-textSoft/70 mb-6 leading-relaxed">Générez des suggestions personnalisées basées sur la météo et votre destination</p>
+              <button className={btnRose} onClick={() => openModal("ai")}>Demander conseil</button>
+            </div>
+          </div>
+
+          {/* Voyages */}
+          <div ref={tripsRef} className="mb-12">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-textSoft">Tous mes voyages</h2>
+              <button className="text-rose hover:text-rose/80 transition-colors" onClick={() => openModal("trip")}>+ Nouveau</button>
+            </div>
+            {trips.length === 0 ? (
+              <div className="border border-ui-border rounded-2xl p-6 text-textSoft/70">Aucun voyage pour l’instant.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {trips.map((t) => (
+                  <div key={t.id} className="bg-ui-surface border border-ui-border p-6 rounded-2xl">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-textSoft">{t.destination}</h3>
+                        <p className="text-textSoft/70">{t.startDate} → {t.endDate}</p>
+                      </div>
+                      <span className="text-xs px-2 py-1 rounded border border-ui-border text-textSoft/80">Local</span>
+                    </div>
+                    {t.notes ? <p className="text-sm text-textSoft/70">{t.notes}</p> : null}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sacs */}
+          <div ref={bagsRef} className="mb-12">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-textSoft">Tous mes sacs</h2>
+              <button className="text-rose hover:text-rose/80 transition-colors" onClick={() => openModal("bag")}>+ Créer un sac</button>
+            </div>
+            {loadingPackages ? (
+              <div className="text-textSoft/70">Chargement…</div>
+            ) : packagesList.length === 0 ? (
+              <div className="border border-ui-border rounded-2xl p-6 text-textSoft/70">Aucun sac pour l’instant.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {packagesList.map((p) => (
+                  <div key={p.id} className="bg-ui-surface border border-ui-border p-6 rounded-2xl">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg font-semibold">{p.name}</h3>
+                    </div>
+                    {p.description ? (
+                      <p className="text-sm text-textSoft/70 whitespace-pre-line line-clamp-3">{p.description}</p>
+                    ) : (
+                      <p className="text-sm text-textSoft/60 italic">Aucune description</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Checklists */}
+          <div ref={checksRef} className="mb-12">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-textSoft">Mes checklists</h2>
+              <button
+                className="text-rose hover:text-rose/80 transition-colors"
+                onClick={() => {
+                  const next = [...checklists, { id: Date.now(), name: "Nouvelle checklist", done: false }];
+                  setChecklists(next);
+                  localStorage.setItem("checklists", JSON.stringify(next));
+                }}
+              >
+                + Ajouter
               </button>
             </div>
+            {checklists.length === 0 ? (
+              <div className="border border-ui-border rounded-2xl p-6 text-textSoft/70">Aucune checklist.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {checklists.map((c) => (
+                  <button
+                    key={c.id}
+                    className="card card--rose text-left"
+                    onClick={() => {
+                      const next = checklists.map((x) => (x.id === c.id ? { ...x, done: !x.done } : x));
+                      setChecklists(next);
+                      localStorage.setItem("checklists", JSON.stringify(next));
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold">{c.name}</div>
+                      <span className="text-xs opacity-80">{c.done ? "✔️ Fait" : "À faire"}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Voyages récents (démo) */}
-          <div className="mb-12">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-textSoft">Mes Voyages Récents</h2>
-              <button className="text-rose hover:text-rose/80 transition-colors">Voir tout →</button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-ui-surface border border-ui-border p-6 rounded-2xl">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-textSoft">Vacances d'été 2024</h3>
-                    <p className="text-textSoft/70">Barcelone, Espagne</p>
-                  </div>
-                  <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">Terminé</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-textSoft/70">
-                    <span>15-22 Juillet • 2 sacs</span>
-                  </div>
-                  <button className="text-rose hover:text-rose/80">Voir détails</button>
-                </div>
-              </div>
-
-              <div className="bg-ui-surface border border-ui-border p-6 rounded-2xl">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-textSoft">Weekend à Paris</h3>
-                    <p className="text-textSoft/70">Paris, France</p>
-                  </div>
-                  <span className="bg-yellow-600 text-white text-xs px-2 py-1 rounded">En cours</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-textSoft/70">
-                    <span>1-3 Oct • 1 sac</span>
-                  </div>
-                  <button className="text-rose hover:text-rose/80">Continuer</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Astuce du jour */}
+          {/* Astuce */}
           <div className="bg-gradient-to-r from-ui-surface to-ui-base border border-ui-border p-8 rounded-2xl">
             <div className="flex items-center mb-4">
               <div className="text-3xl mr-4">💡</div>
@@ -246,19 +309,16 @@ export default function Dashboard() {
             </div>
             <p className="text-textSoft/80 mb-4">
               Saviez-vous que vous pouvez sauvegarder vos listes de bagages comme modèles réutilisables ?
-              Créez une fois, utilisez pour tous vos voyages similaires !
             </p>
             <button className={btnRose}>En savoir plus</button>
           </div>
         </div>
       </main>
 
-      {/* Modales (fonctionnel) */}
-      {/* Modales (fonctionnel) */}
-<TripModal open={modal === "trip"} onClose={closeModal} onCreated={handleTripCreated} />
-<BagModal  open={modal === "bag"}  onClose={closeModal} />
-<AIModal   open={modal === "ai"}   onClose={closeModal} packages={packagesList} loading={loadingPackages} />
-
+      {/* Modales */}
+      <TripModal open={modal === "trip"} onClose={closeModal} onCreated={handleTripCreated} />
+      <BagModal open={modal === "bag"} onClose={closeModal} />
+      <AIModal open={modal === "ai"} onClose={closeModal} packages={packagesList} loading={loadingPackages} />
 
       <Footer />
     </div>

@@ -36,3 +36,22 @@ model Package {
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
 }
+
+model Item {
+  id           Int           @id @default(autoincrement())
+  name         String
+  weight       Float?        // en kg (ex. 0.2)
+  category     String?
+  packageItems PackageItem[]
+}
+
+model PackageItem {
+  id          Int      @id @default(autoincrement())
+  packageId   Int
+  itemId      Int?     // si objet de base
+  customName  String?  // si objet perso
+  customWeight Float?  // kg (optionnel)
+
+  package     Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  item        Item?    @relation(fields: [itemId], references: [id], onDelete: SetNull)
+}
