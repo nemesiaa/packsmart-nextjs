@@ -128,39 +128,36 @@ export default function Dashboard() {
 
           {/* === Statistiques (tes classes d’avant : bleu / vert / violet) === */}
 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-  <div className="p-6 rounded-2xl border bg-gradient-to-br from-[#b48ead] to-[#8e6a8e]
-                  shadow-[0_10px_30px_rgba(180,142,173,0.25)] border-[rgba(180,142,173,0.55)]">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-white/90 text-sm">Total Voyages</p>
-        <p className="text-3xl font-bold text-white">{stats.totalTrips}</p>
-      </div>
-      <div className="text-4xl opacity-90">✈️</div>
-    </div>
-  </div>
+            <div className="kpi kpi--lilac p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="kpi__label">Total Voyages</p>
+                  <p className="kpi__num">{stats.totalTrips}</p>
+                </div>
+                <div className="text-4xl opacity-90">✈️</div>
+              </div>
+            </div>
 
-  <div className="p-6 rounded-2xl border bg-gradient-to-br from-[#a67fa4] to-[#6e4f6e]
-                  shadow-[0_10px_30px_rgba(180,142,173,0.22)] border-[rgba(180,142,173,0.45)]">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-white/90 text-sm">Mes Sacs</p>
-        <p className="text-3xl font-bold text-white">{stats.totalPackages}</p>
-      </div>
-      <div className="text-4xl opacity-90">🧳</div>
-    </div>
-  </div>
+            <div className="kpi kpi--orchid p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="kpi__label">Mes Sacs</p>
+                  <p className="kpi__num">{stats.totalPackages}</p>
+                </div>
+                <div className="text-4xl opacity-90">🧳</div>
+              </div>
+            </div>
 
-  <div className="p-6 rounded-2xl border bg-gradient-to-br from-[#c392ba] to-[#7b5677]
-                  shadow-[0_10px_30px_rgba(180,142,173,0.22)] border-[rgba(180,142,173,0.45)]">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-white/90 text-sm">Checklists</p>
-        <p className="text-3xl font-bold text-white">{stats.completedChecklists}</p>
-      </div>
-      <div className="text-4xl opacity-90">📋</div>
-    </div>
-  </div>
-</div>
+            <div className="kpi kpi--plum p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="kpi__label">Checklists</p>
+                  <p className="kpi__num">{stats.completedChecklists}</p>
+                </div>
+                <div className="text-4xl opacity-90">📋</div>
+              </div>
+            </div>
+          </div>
 
 
           {/* === 3 cartes d’action (tes classes d’avant) === */}
@@ -257,9 +254,11 @@ export default function Dashboard() {
       </main>
 
       {/* Modales (fonctionnel) */}
-      <TripModal open={modal === "trip"} onClose={closeModal} onCreated={handleTripCreated} />
-      <BagModal  open={modal === "bag"}  onClose={closeModal} />
-      <AIModal   open={modal === "ai"}   onClose={closeModal} packages={packagesList} loading={loadingPackages} />
+      {/* Modales (fonctionnel) */}
+<TripModal open={modal === "trip"} onClose={closeModal} onCreated={handleTripCreated} />
+<BagModal  open={modal === "bag"}  onClose={closeModal} />
+<AIModal   open={modal === "ai"}   onClose={closeModal} packages={packagesList} loading={loadingPackages} />
+
 
       <Footer />
     </div>
