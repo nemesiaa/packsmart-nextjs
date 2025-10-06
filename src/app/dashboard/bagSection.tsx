@@ -1,0 +1,54 @@
+"use client";
+
+import React from "react";
+
+type Bag = { id: number; name: string; description?: string | null };
+
+export default function BagsSection({
+  sectionRef,
+  loading,
+  bags,
+  onOpenCreate,
+}: {
+  sectionRef: React.RefObject<HTMLDivElement>;
+  loading: boolean;
+  bags: Bag[];
+  onOpenCreate: () => void;
+}) {
+  return (
+    <div ref={sectionRef} className="mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-textSoft">Tous mes sacs</h2>
+        <button className="text-rose hover:text-rose/80 transition-colors" onClick={onOpenCreate}>
+          + Créer un sac
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-textSoft/70">Chargement…</div>
+      ) : bags.length === 0 ? (
+        <div className="border border-ui-border rounded-2xl p-6 text-textSoft/70">
+          Aucun sac pour l’instant.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {bags.map((p) => (
+            <div key={p.id} className="bg-ui-surface border border-ui-border p-6 rounded-2xl">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-semibold">{p.name}</h3>
+              </div>
+              {p.description ? (
+                <p className="text-sm text-textSoft/70 whitespace-pre-line line-clamp-3">
+                  {p.description}
+                </p>
+              ) : (
+                <p className="text-sm text-textSoft/60 italic">Aucune description</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+

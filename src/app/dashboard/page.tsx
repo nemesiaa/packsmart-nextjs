@@ -9,6 +9,11 @@ import TripModal from "@/components/modals/tripmodal";
 import BagModal from "@/components/modals/bagmodal";
 import AIModal from "@/components/modals/aimodal";
 
+// Sections découpées (fichiers en minuscules, exports en PascalCase)
+import BagsSection from "@/app/dashboard/bagSection";
+import TripsSection from "@/app/dashboard/tripSection";
+import ChecklistSection from "@/app/dashboard/checklistSection";
+
 type ModalType = "trip" | "bag" | "ai" | null;
 
 export default function Dashboard() {
@@ -17,10 +22,14 @@ export default function Dashboard() {
   // State principal
   const [user, setUser] = useState<any>(null);
   const [modal, setModal] = useState<ModalType>(null);
+
+  // Données
   const [trips, setTrips] = useState<any[]>([]);
   const [checklists, setChecklists] = useState<any[]>([]);
   const [packagesList, setPackagesList] = useState<any[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
+
+  // KPI
   const [stats, setStats] = useState({ totalTrips: 0, totalPackages: 0, completedChecklists: 0 });
 
   // Ancres pour scroller depuis les KPI
@@ -69,7 +78,7 @@ export default function Dashboard() {
     };
   }, [user?.id]);
 
-  // Refetch automatique après création / MAJ d’un sac
+  // Refetch auto après création / MAJ d’un sac (événements issus de BagModal)
   useEffect(() => {
     const refetch = async (userId?: number) => {
       if (!userId) return;
@@ -184,7 +193,7 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Actions */}
+          {/* Cartes d’action */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             <div className="bg-ui-surface border border-ui-border p-8 rounded-2xl transition-all hover:-translate-y-0.5 hover:border-rose hover:shadow-xl hover:shadow-rose/20 hover:bg-[#b48ead26] group">
               <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">✈️</div>
@@ -208,98 +217,30 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Voyages */}
-          <div ref={tripsRef} className="mb-12">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-textSoft">Tous mes voyages</h2>
-              <button className="text-rose hover:text-rose/80 transition-colors" onClick={() => openModal("trip")}>+ Nouveau</button>
-            </div>
-            {trips.length === 0 ? (
-              <div className="border border-ui-border rounded-2xl p-6 text-textSoft/70">Aucun voyage pour l’instant.</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {trips.map((t) => (
-                  <div key={t.id} className="bg-ui-surface border border-ui-border p-6 rounded-2xl">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-textSoft">{t.destination}</h3>
-                        <p className="text-textSoft/70">{t.startDate} → {t.endDate}</p>
-                      </div>
-                      <span className="text-xs px-2 py-1 rounded border border-ui-border text-textSoft/80">Local</span>
-                    </div>
-                    {t.notes ? <p className="text-sm text-textSoft/70">{t.notes}</p> : null}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Sections découpées */}
+          <TripsSection sectionRef={tripsRef} trips={trips} onOpenCreate={() => openModal("trip")} />
 
-          {/* Sacs */}
-          <div ref={bagsRef} className="mb-12">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-textSoft">Tous mes sacs</h2>
-              <button className="text-rose hover:text-rose/80 transition-colors" onClick={() => openModal("bag")}>+ Créer un sac</button>
-            </div>
-            {loadingPackages ? (
-              <div className="text-textSoft/70">Chargement…</div>
-            ) : packagesList.length === 0 ? (
-              <div className="border border-ui-border rounded-2xl p-6 text-textSoft/70">Aucun sac pour l’instant.</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {packagesList.map((p) => (
-                  <div key={p.id} className="bg-ui-surface border border-ui-border p-6 rounded-2xl">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-semibold">{p.name}</h3>
-                    </div>
-                    {p.description ? (
-                      <p className="text-sm text-textSoft/70 whitespace-pre-line line-clamp-3">{p.description}</p>
-                    ) : (
-                      <p className="text-sm text-textSoft/60 italic">Aucune description</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <BagsSection
+            sectionRef={bagsRef}
+            loading={loadingPackages}
+            bags={packagesList}
+            onOpenCreate={() => openModal("bag")}
+          />
 
-          {/* Checklists */}
-          <div ref={checksRef} className="mb-12">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-textSoft">Mes checklists</h2>
-              <button
-                className="text-rose hover:text-rose/80 transition-colors"
-                onClick={() => {
-                  const next = [...checklists, { id: Date.now(), name: "Nouvelle checklist", done: false }];
-                  setChecklists(next);
-                  localStorage.setItem("checklists", JSON.stringify(next));
-                }}
-              >
-                + Ajouter
-              </button>
-            </div>
-            {checklists.length === 0 ? (
-              <div className="border border-ui-border rounded-2xl p-6 text-textSoft/70">Aucune checklist.</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {checklists.map((c) => (
-                  <button
-                    key={c.id}
-                    className="card card--rose text-left"
-                    onClick={() => {
-                      const next = checklists.map((x) => (x.id === c.id ? { ...x, done: !x.done } : x));
-                      setChecklists(next);
-                      localStorage.setItem("checklists", JSON.stringify(next));
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold">{c.name}</div>
-                      <span className="text-xs opacity-80">{c.done ? "✔️ Fait" : "À faire"}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <ChecklistSection
+            sectionRef={checksRef}
+            checklists={checklists}
+            onAdd={() => {
+              const next = [...checklists, { id: Date.now(), name: "Nouvelle checklist", done: false }];
+              setChecklists(next);
+              localStorage.setItem("checklists", JSON.stringify(next));
+            }}
+            onToggle={(id) => {
+              const next = checklists.map((x) => (x.id === id ? { ...x, done: !x.done } : x));
+              setChecklists(next);
+              localStorage.setItem("checklists", JSON.stringify(next));
+            }}
+          />
 
           {/* Astuce */}
           <div className="bg-gradient-to-r from-ui-surface to-ui-base border border-ui-border p-8 rounded-2xl">

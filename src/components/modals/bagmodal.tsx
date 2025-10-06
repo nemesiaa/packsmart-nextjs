@@ -112,7 +112,7 @@ export default function BagModal({
   const handleSaveCreate = async () => {
     if (saving) return;
     if (!name.trim()) {
-      alert("Donne un nom à ton sac 🙂");
+      alert("Donne un nom à ton sac.");
       return;
     }
     if (!userId) {
@@ -236,27 +236,35 @@ export default function BagModal({
             </div>
           ) : (
             <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {content.map((it) => (
-                <li
-                  key={it.key}
-                  className="flex items-center justify-between bg-[#171a1f] border border-ui-border rounded-lg px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{it.name}</div>
-                    <div className="text-xs text-white/60">
-                      {typeof it.weight === "number" ? `${it.weight.toFixed(2)} kg` : "—"}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(it.key)}
-                    className="text-sm border border-rose text-rose px-3 py-1 rounded-lg bg-ui-base/60 hover:bg-rose/10 transition-all"
-                  >
-                    Retirer
-                  </button>
-                </li>
-              ))}
-            </ul>
+    {content.map((it) => (
+      <li
+        key={it.key}
+        className="group flex items-center justify-between bg-[#171a1f] border border-ui-border rounded-lg px-3 py-2 transition-colors hover:border-rose/60"
+      >
+        <div className="min-w-0">
+          {/* Texte avec hover léger (couleur rosée) */}
+          <div className="font-medium truncate transition-colors group-hover:text-rose">
+            {it.name}
+          </div>
+          <div className="text-xs text-white/60 transition-opacity group-hover:opacity-90">
+            {typeof it.weight === "number" ? `${it.weight.toFixed(2)} kg` : "—"}
+          </div>
+        </div>
+
+        {/* Petite croix pour supprimer */}
+        <button
+          type="button"
+          onClick={() => removeItem(it.key)}
+          className="ml-3 inline-flex h-7 w-7 items-center justify-center rounded-md border border-ui-border text-white/70
+                     hover:text-rose hover:border-rose/60 hover:bg-rose/10 transition-colors"
+          aria-label={`Supprimer ${it.name}`}
+          title="Supprimer"
+        >
+          ✕
+        </button>
+      </li>
+    ))}
+  </ul>
           )}
         </div>
 
