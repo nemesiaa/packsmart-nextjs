@@ -15,7 +15,7 @@ export default function TripsSection({
   trips,
   onOpenCreate,
 }: {
-  sectionRef: React.RefObject<HTMLDivElement>;
+  sectionRef: React.RefObject<HTMLDivElement | null>;
   trips: Trip[];
   onOpenCreate: () => void; // ouvre la modale "Créer un voyage"
 }) {

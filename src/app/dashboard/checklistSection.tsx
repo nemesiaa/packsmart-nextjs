@@ -10,9 +10,9 @@ export default function ChecklistSection({
   onAdd,
   onToggle,
 }: {
-  sectionRef: React.RefObject<HTMLDivElement>;
+  sectionRef: React.RefObject<HTMLDivElement | null>;
   checklists: Checklist[];
-  onAdd: () => void;                     // déclenche l’ajout d’une checklist (géré par le parent)
+  onAdd: () => void;
   onToggle: (id: number) => void;        // coche/décoche (géré par le parent)
 }) {
   return (

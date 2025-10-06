@@ -10,7 +10,7 @@ export default function BagsSection({
   bags,
   onOpenCreate,
 }: {
-  sectionRef: React.RefObject<HTMLDivElement>;
+  sectionRef: React.RefObject<HTMLDivElement | null>;
   loading: boolean;
   bags: Bag[];
   onOpenCreate: () => void;
