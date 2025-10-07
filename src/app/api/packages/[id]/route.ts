@@ -5,10 +5,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // PATCH /api/packages/:id
-export async function PATCH(request: Request, { params }: any) {
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = Number(params.id);
-    if (!Number.isFinite(id)) {
+    const { id } = await context.params;
+    const numericId = Number(id);
+
+    if (!Number.isFinite(numericId)) {
       return NextResponse.json({ error: "id invalide" }, { status: 400 });
     }
 
@@ -16,7 +21,7 @@ export async function PATCH(request: Request, { params }: any) {
     const { description } = body ?? {};
 
     const updated = await prisma.package.update({
-      where: { id },
+      where: { id: numericId },
       data: { description: description ?? null },
       select: { id: true, name: true, description: true, updatedAt: true },
     });
@@ -29,17 +34,22 @@ export async function PATCH(request: Request, { params }: any) {
 }
 
 // DELETE /api/packages/:id
-export async function DELETE(_req: Request, { params }: any) {
-  const id = Number(params.id);
-  if (!Number.isFinite(id)) {
-    return NextResponse.json({ error: "id invalide" }, { status: 400 });
-  }
-
+export async function DELETE(
+  _req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    // Si tu as des items liés et pas de cascade, décommente :
-    // await prisma.packageItem.deleteMany({ where: { packageId: id } });
+    const { id } = await context.params;
+    const numericId = Number(id);
 
-    await prisma.package.delete({ where: { id } });
+    if (!Number.isFinite(numericId)) {
+      return NextResponse.json({ error: "id invalide" }, { status: 400 });
+    }
+
+    // Si tu as des items liés et pas de cascade, tu peux activer :
+    // await prisma.packageItem.deleteMany({ where: { packageId: numericId } });
+
+    await prisma.package.delete({ where: { id: numericId } });
 
     return new Response(null, { status: 204 });
   } catch (e: any) {
