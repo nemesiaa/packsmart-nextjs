@@ -14,7 +14,7 @@ export default function ChecklistSection({
   sectionRef: React.RefObject<HTMLDivElement | null>;
   checklists: Checklist[];
   onAdd: () => void;
-  onToggle: (id: number) => void;        // coche/décoche (géré par le parent)
+  onToggle: (id: number) => void;
   onDeleteChecklist?: (id: number) => void; // [ADD]
 }) {
   return (
@@ -31,21 +31,21 @@ export default function ChecklistSection({
           Aucune checklist.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {checklists.map((c) => (
-            <div key={c.id} className="card card--rose text-left">
-              {/* header de la card */}
-              <div className="flex items-start justify-between">
+            <div key={c.id} className="bg-ui-surface border border-ui-border p-6 rounded-2xl">
+              <div className="flex justify-between items-start mb-2">
+                {/* Titre + état (clic = toggle) */}
                 <button
                   className="text-left"
                   onClick={() => onToggle(c.id)}
                   title="Cliquer pour cocher/décocher"
                 >
-                  <div className="font-semibold">{c.name}</div>
+                  <h3 className="text-lg font-semibold">{c.name}</h3>
                   <span className="text-xs opacity-80">{c.done ? "✔️ Fait" : "À faire"}</span>
                 </button>
 
-                {/* [ADD] bouton supprimer */}
+                {/* [ADD] bouton supprimer (même style que BagsSection) */}
                 {onDeleteChecklist && (
                   <button
                     onClick={() => onDeleteChecklist(c.id)}
@@ -53,16 +53,16 @@ export default function ChecklistSection({
              text-textSoft/60 hover:text-rose
              border border-transparent hover:border-ui-border hover:bg-white/5
              transition-colors"
-  aria-label="Supprimer"
-  title="Supprimer"
->
-  <span
-    className="material-symbols-outlined text-[20px] leading-none"
-    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
-  >
-    delete
-  </span>
-</button>
+                    aria-label="Supprimer"
+                    title="Supprimer"
+                  >
+                    <span
+                      className="material-symbols-outlined text-[20px] leading-none"
+                      style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                    >
+                      delete
+                    </span>
+                  </button>
                 )}
               </div>
             </div>

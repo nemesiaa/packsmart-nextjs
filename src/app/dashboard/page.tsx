@@ -105,7 +105,8 @@ export default function Dashboard() {
     setStats({
       totalTrips: trips.length,
       totalPackages: packagesList.length,
-      completedChecklists: checklists.filter((c: any) => c?.done).length,
+      // Modif : total checklists créées (pas seulement celles cochées)
+      completedChecklists: checklists.length,
     });
   }, [trips, packagesList, checklists]);
 
@@ -270,11 +271,8 @@ export default function Dashboard() {
           <ChecklistSection
             sectionRef={checksRef}
             checklists={checklists}
-            onAdd={() => {
-              const next = [...checklists, { id: Date.now(), name: "Nouvelle checklist", done: false }];
-              setChecklists(next);
-              localStorage.setItem("checklists", JSON.stringify(next));
-            }}
+            // Modif : ouvrir le modal au lieu de créer direct
+            onAdd={() => openModal("checklist")}
             onToggle={(id) => {
               const next = checklists.map((x) => (x.id === id ? { ...x, done: !x.done } : x));
               setChecklists(next);
@@ -292,7 +290,6 @@ export default function Dashboard() {
             <p className="text-textSoft/80 mb-4">
               Saviez-vous que vous pouvez sauvegarder vos listes de bagages comme modèles réutilisables ?
             </p>
-            <button className={btnRose}>En savoir plus</button>
           </div>
         </div>
       </main>

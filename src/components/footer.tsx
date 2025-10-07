@@ -9,8 +9,8 @@ export default function Footer() {
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl font-bold" style={{ color: "var(--rose)" }}>PackSmart</span>
             </div>
-            <p className="text-gray-400 text-sm mb-2">Application Node.js avec TypeScript, Express et Prisma.</p>
-            <p className="text-gray-400 text-sm">Architecture MVC moderne et performante.</p>
+            <p className="text-gray-400 text-sm mb-2">Application Next.js avec React et Prisma.</p>
+            <p className="text-gray-400 text-sm">Architecture modulaire et dynamique.</p>
           </div>
 
           {/* colonne 2 */}
@@ -25,7 +25,10 @@ export default function Footer() {
 
           {/* colonne 3 */}
           <div>
-            <p className="text-gray-500 text-sm">Fait avec TypeScript</p>
+            <ul>
+            <li><p className="font-bold mb-4">Contactez nous</p></li>
+            <li><p className="text-gray-500 text-sm">packsmart.info@outlook.fr</p></li>
+            </ul>
           </div>
         </div>
 
