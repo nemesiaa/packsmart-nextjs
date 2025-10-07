@@ -14,10 +14,12 @@ export default function TripsSection({
   sectionRef,
   trips,
   onOpenCreate,
+  onDeleteTrip, // [ADD]
 }: {
   sectionRef: React.RefObject<HTMLDivElement | null>;
   trips: Trip[];
   onOpenCreate: () => void; // ouvre la modale "Créer un voyage"
+  onDeleteTrip?: (id: number) => void; // [ADD]
 }) {
   return (
     <div ref={sectionRef} className="mb-12">
@@ -43,10 +45,30 @@ export default function TripsSection({
                     {t.startDate} → {t.endDate}
                   </p>
                 </div>
-                <span className="text-xs px-2 py-1 rounded border border-ui-border text-textSoft/80">
-                  Local
-                </span>
+
+                <div className="flex items-center gap-2">
+                  {/* [ADD] bouton supprimer (Google Fonts / Material Symbols) */}
+                  {onDeleteTrip && (
+                    <button
+                      onClick={() => onDeleteTrip(t.id)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg
+             text-textSoft/60 hover:text-rose
+             border border-transparent hover:border-ui-border hover:bg-white/5
+             transition-colors"
+  aria-label="Supprimer"
+  title="Supprimer"
+>
+  <span
+    className="material-symbols-outlined text-[20px] leading-none"
+    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+  >
+    delete
+  </span>
+                    </button>
+                  )}
+                </div>
               </div>
+
               {t.notes ? <p className="text-sm text-textSoft/70">{t.notes}</p> : null}
             </div>
           ))}

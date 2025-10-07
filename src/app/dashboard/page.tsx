@@ -136,6 +136,34 @@ export default function Dashboard() {
     setTrips(Array.isArray(list) ? list : []);
   };
 
+  // [ADD] SUPPRESSION — voyages (localStorage)
+  const handleDeleteTrip = (id: number) => {
+    if (!confirm("Supprimer ce voyage ?")) return;
+    const next = trips.filter((t: any) => t.id !== id);
+    setTrips(next);
+    localStorage.setItem("trips", JSON.stringify(next));
+  };
+
+  // [ADD] SUPPRESSION — checklists (localStorage)
+  const handleDeleteChecklist = (id: number) => {
+    if (!confirm("Supprimer cette checklist ?")) return;
+    const next = checklists.filter((c: any) => c.id !== id);
+    setChecklists(next);
+    localStorage.setItem("checklists", JSON.stringify(next));
+  };
+
+  // [ADD] SUPPRESSION — sacs (API + state)
+  const handleDeleteBag = async (id: number) => {
+    if (!confirm("Supprimer ce sac ?")) return;
+    try {
+      const res = await fetch(`/api/packages/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("DELETE failed");
+      setPackagesList((prev) => prev.filter((b: any) => b.id !== id));
+    } catch {
+      alert("Suppression impossible pour le moment.");
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-ui-base flex items-center justify-center">
@@ -218,13 +246,19 @@ export default function Dashboard() {
           </div>
 
           {/* Sections découpées */}
-          <TripsSection sectionRef={tripsRef} trips={trips} onOpenCreate={() => openModal("trip")} />
+          <TripsSection
+            sectionRef={tripsRef}
+            trips={trips}
+            onOpenCreate={() => openModal("trip")}
+            onDeleteTrip={handleDeleteTrip}        // [ADD]
+          />
 
           <BagsSection
             sectionRef={bagsRef}
             loading={loadingPackages}
             bags={packagesList}
             onOpenCreate={() => openModal("bag")}
+            onDeleteBag={handleDeleteBag}          // [ADD]
           />
 
           <ChecklistSection
@@ -240,6 +274,7 @@ export default function Dashboard() {
               setChecklists(next);
               localStorage.setItem("checklists", JSON.stringify(next));
             }}
+            onDeleteChecklist={handleDeleteChecklist} // [ADD]
           />
 
           {/* Astuce */}
