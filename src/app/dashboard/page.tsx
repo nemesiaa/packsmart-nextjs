@@ -7,14 +7,14 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import TripModal from "@/components/modals/tripmodal";
 import BagModal from "@/components/modals/bagmodal";
-import AIModal from "@/components/modals/aimodal";
+import ChecklistModal from "@/components/modals/checklistmodal";
 
 // Sections découpées (fichiers en minuscules, exports en PascalCase)
 import BagsSection from "@/app/dashboard/bagSection";
 import TripsSection from "@/app/dashboard/tripSection";
 import ChecklistSection from "@/app/dashboard/checklistSection";
 
-type ModalType = "trip" | "bag" | "ai" | null;
+type ModalType = "trip" | "bag" | "checklist" | null;
 
 export default function Dashboard() {
   const router = useRouter();
@@ -135,6 +135,12 @@ export default function Dashboard() {
     const list = JSON.parse(localStorage.getItem("trips") || "[]");
     setTrips(Array.isArray(list) ? list : []);
   };
+  const handleChecklistCreate = (payload: { title: string; prefill?: boolean }) => {
+  const newChecklist = { id: Date.now(), name: (payload.title || "Nouvelle checklist").trim(), done: false };
+  const next = [newChecklist, ...checklists];
+  setChecklists(next);
+  localStorage.setItem("checklists", JSON.stringify(next));
+};
 
   // [ADD] SUPPRESSION — voyages (localStorage)
   const handleDeleteTrip = (id: number) => {
@@ -238,11 +244,12 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-ui-surface border border-ui-border p-8 rounded-2xl transition-all hover:-translate-y-0.5 hover:border-rose hover:shadow-xl hover:shadow-rose/20 hover:bg-[#b48ead26] group">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">🤖</div>
-              <h3 className="text-2xl font-bold mb-4 text-textSoft">IA Assistant</h3>
-              <p className="text-textSoft/70 mb-6 leading-relaxed">Générez des suggestions personnalisées basées sur la météo et votre destination</p>
-              <button className={btnRose} onClick={() => openModal("ai")}>Demander conseil</button>
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">📋</div>
+              <h3 className="text-2xl font-bold mb-4 text-textSoft">Mes Checklists</h3>
+              <p className="text-textSoft/70 mb-6 leading-relaxed">Créez et gérez vos listes pour chaque voyage</p>
+              <button className={btnRose} onClick={() => openModal("checklist")}>Créer une checklist</button>
             </div>
+
           </div>
 
           {/* Sections découpées */}
@@ -294,8 +301,7 @@ export default function Dashboard() {
       {/* Modales */}
       <TripModal open={modal === "trip"} onClose={closeModal} onCreated={handleTripCreated} />
       <BagModal open={modal === "bag"} onClose={closeModal} />
-      <AIModal open={modal === "ai"} onClose={closeModal} packages={packagesList} loading={loadingPackages} />
-
+      <ChecklistModal open={modal === "checklist"} onClose={closeModal} onCreate={handleChecklistCreate} />
       <Footer />
     </div>
   );

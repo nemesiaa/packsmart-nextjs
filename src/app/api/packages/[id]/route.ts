@@ -27,3 +27,30 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+// DELETE /api/packages/:id
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  const id = Number(params.id);
+  if (!Number.isFinite(id)) {
+    return NextResponse.json({ error: "id invalide" }, { status: 400 });
+  }
+
+  try {
+    // Si tu as des éléments liés (ex: PackageItem) et pas de cascade en DB,
+    // dé-commente cette ligne pour éviter l'erreur de contrainte FK (P2003).
+    // await prisma.packageItem.deleteMany({ where: { packageId: id } });
+
+    await prisma.package.delete({ where: { id } });
+
+    // No Content
+    return new NextResponse(null, { status: 204 });
+  } catch (e: any) {
+    console.error("DELETE /api/packages/:id error:", e);
+    // P2025 = record not found ; sinon 500
+    const status = e?.code === "P2025" ? 404 : 500;
+    return NextResponse.json({ error: e?.code || "Erreur serveur" }, { status });
+  }
+}
