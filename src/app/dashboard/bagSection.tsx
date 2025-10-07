@@ -9,13 +9,15 @@ export default function BagsSection({
   loading,
   bags,
   onOpenCreate,
-  onDeleteBag, // [ADD]
+  onDeleteBag,        // [EXISTANT]
+  onEditBag,          // [ADD]
 }: {
   sectionRef: React.RefObject<HTMLDivElement | null>;
   loading: boolean;
   bags: Bag[];
   onOpenCreate: () => void;
-  onDeleteBag?: (id: number) => void; // [ADD]
+  onDeleteBag?: (id: number) => void;
+  onEditBag?: (id: number) => void;      // [ADD]
 }) {
   return (
     <div ref={sectionRef} className="mb-12">
@@ -39,25 +41,47 @@ export default function BagsSection({
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-lg font-semibold">{p.name}</h3>
 
-                {/* [ADD] bouton supprimer (Google Fonts / Material Symbols) */}
-                {onDeleteBag && (
-                  <button
-                    onClick={() => onDeleteBag(p.id)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg
-             text-textSoft/60 hover:text-rose
-             border border-transparent hover:border-ui-border hover:bg-white/5
-             transition-colors"
-  aria-label="Supprimer"
-  title="Supprimer"
->
-  <span
-    className="material-symbols-outlined text-[20px] leading-none"
-    style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
-  >
-    delete
-  </span>
-</button>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* [ADD] Modifier */}
+                  {onEditBag && (
+                    <button
+                      onClick={() => onEditBag(p.id)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg
+                                 text-textSoft/60 hover:text-textSoft
+                                 border border-transparent hover:border-ui-border hover:bg-white/5
+                                 transition-colors"
+                      aria-label="Modifier"
+                      title="Modifier"
+                    >
+                      <span
+                        className="material-symbols-outlined text-[20px] leading-none"
+                        style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                      >
+                        edit
+                      </span>
+                    </button>
+                  )}
+
+                  {/* Supprimer */}
+                  {onDeleteBag && (
+                    <button
+                      onClick={() => onDeleteBag(p.id)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg
+                                 text-textSoft/60 hover:text-rose
+                                 border border-transparent hover:border-ui-border hover:bg-white/5
+                                 transition-colors"
+                      aria-label="Supprimer"
+                      title="Supprimer"
+                    >
+                      <span
+                        className="material-symbols-outlined text-[20px] leading-none"
+                        style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                      >
+                        delete
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {p.description ? (

@@ -14,12 +14,14 @@ export default function TripsSection({
   sectionRef,
   trips,
   onOpenCreate,
-  onDeleteTrip, // [ADD]
+  onDeleteTrip,          // [EXISTANT]
+  onEditTrip,            // [ADD]
 }: {
   sectionRef: React.RefObject<HTMLDivElement | null>;
   trips: Trip[];
   onOpenCreate: () => void; // ouvre la modale "Créer un voyage"
-  onDeleteTrip?: (id: number) => void; // [ADD]
+  onDeleteTrip?: (id: number) => void;
+  onEditTrip?: (id: number) => void;     // [ADD]
 }) {
   return (
     <div ref={sectionRef} className="mb-12">
@@ -47,23 +49,43 @@ export default function TripsSection({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* [ADD] bouton supprimer (Google Fonts / Material Symbols) */}
-                  {onDeleteTrip && (
+                  {/* [ADD] Modifier */}
+                  {onEditTrip && (
                     <button
-                      onClick={() => onDeleteTrip(t.id)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg
-             text-textSoft/60 hover:text-rose
+                        onClick={() => onEditTrip?.(t.id)}
+  className="inline-flex h-8 w-8 items-center justify-center rounded-lg
+             text-textSoft/60 hover:text-white
              border border-transparent hover:border-ui-border hover:bg-white/5
              transition-colors"
-  aria-label="Supprimer"
-  title="Supprimer"
+  aria-label="Modifier"
+  title="Modifier"
 >
   <span
     className="material-symbols-outlined text-[20px] leading-none"
     style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
   >
-    delete
-  </span>
+    edit
+                      </span>
+                    </button>
+                  )}
+
+                  {/* Supprimer */}
+                  {onDeleteTrip && (
+                    <button
+                      onClick={() => onDeleteTrip(t.id)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg
+                                 text-textSoft/60 hover:text-rose
+                                 border border-transparent hover:border-ui-border hover:bg-white/5
+                                 transition-colors"
+                      aria-label="Supprimer"
+                      title="Supprimer"
+                    >
+                      <span
+                        className="material-symbols-outlined text-[20px] leading-none"
+                        style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                      >
+                        delete
+                      </span>
                     </button>
                   )}
                 </div>

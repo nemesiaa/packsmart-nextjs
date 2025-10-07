@@ -9,13 +9,15 @@ export default function ChecklistSection({
   checklists,
   onAdd,
   onToggle,
-  onDeleteChecklist, // [ADD]
+  onDeleteChecklist,   // [EXISTANT]
+  onEditChecklist,     // [ADD]
 }: {
   sectionRef: React.RefObject<HTMLDivElement | null>;
   checklists: Checklist[];
   onAdd: () => void;
   onToggle: (id: number) => void;
-  onDeleteChecklist?: (id: number) => void; // [ADD]
+  onDeleteChecklist?: (id: number) => void;
+  onEditChecklist?: (id: number) => void;   // [ADD]
 }) {
   return (
     <div ref={sectionRef} className="mb-12">
@@ -45,25 +47,47 @@ export default function ChecklistSection({
                   <span className="text-xs opacity-80">{c.done ? "✔️ Fait" : "À faire"}</span>
                 </button>
 
-                {/* [ADD] bouton supprimer (même style que BagsSection) */}
-                {onDeleteChecklist && (
-                  <button
-                    onClick={() => onDeleteChecklist(c.id)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg
-             text-textSoft/60 hover:text-rose
-             border border-transparent hover:border-ui-border hover:bg-white/5
-             transition-colors"
-                    aria-label="Supprimer"
-                    title="Supprimer"
-                  >
-                    <span
-                      className="material-symbols-outlined text-[20px] leading-none"
-                      style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                <div className="flex items-center gap-2">
+                  {/* [ADD] Modifier */}
+                  {onEditChecklist && (
+                    <button
+                      onClick={() => onEditChecklist(c.id)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg
+                                 text-textSoft/60 hover:text-textSoft
+                                 border border-transparent hover:border-ui-border hover:bg-white/5
+                                 transition-colors"
+                      aria-label="Modifier"
+                      title="Modifier"
                     >
-                      delete
-                    </span>
-                  </button>
-                )}
+                      <span
+                        className="material-symbols-outlined text-[20px] leading-none"
+                        style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                      >
+                        edit
+                      </span>
+                    </button>
+                  )}
+
+                  {/* Supprimer */}
+                  {onDeleteChecklist && (
+                    <button
+                      onClick={() => onDeleteChecklist(c.id)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg
+                                 text-textSoft/60 hover:text-rose
+                                 border border-transparent hover:border-ui-border hover:bg-white/5
+                                 transition-colors"
+                      aria-label="Supprimer"
+                      title="Supprimer"
+                    >
+                      <span
+                        className="material-symbols-outlined text-[20px] leading-none"
+                        style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                      >
+                        delete
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

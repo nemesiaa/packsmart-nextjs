@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -8,30 +9,43 @@ import TripModal from "@/components/modals/tripmodal";
 import BagModal from "@/components/modals/bagmodal";
 import ChecklistModal from "@/components/modals/checklistmodal";
 
-// Sections découpées (fichiers en minuscules, exports en PascalCase)
+// Sections
 import BagsSection from "@/app/dashboard/bagSection";
 import TripsSection from "@/app/dashboard/tripSection";
 import ChecklistSection from "@/app/dashboard/checklistSection";
 
 type ModalType = "trip" | "bag" | "checklist" | null;
 
+type Trip = { id: number; destination: string; startDate: string; endDate: string; notes?: string };
+type Bag = { id: number; name: string; description?: string | null };
+type Checklist = { id: number; name: string; done?: boolean };
+
 export default function Dashboard() {
   const router = useRouter();
 
-  // State principal
+  // Session
   const [user, setUser] = useState<any>(null);
+
+  // Modales
   const [modal, setModal] = useState<ModalType>(null);
 
-  // Données
-  const [trips, setTrips] = useState<any[]>([]);
-  const [checklists, setChecklists] = useState<any[]>([]);
-  const [packagesList, setPackagesList] = useState<any[]>([]);
+  // Données locales
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [checklists, setChecklists] = useState<Checklist[]>([]);
+
+  // Données API (bags)
+  const [packagesList, setPackagesList] = useState<Bag[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
+
+  // Éditions en cours (pour pré-remplir les modales)
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [editingBag, setEditingBag] = useState<Bag | null>(null);
+  const [editingChecklist, setEditingChecklist] = useState<Checklist | null>(null);
 
   // KPI
   const [stats, setStats] = useState({ totalTrips: 0, totalPackages: 0, completedChecklists: 0 });
 
-  // Ancres pour scroller depuis les KPI
+  // Ancres
   const tripsRef = useRef<HTMLDivElement | null>(null);
   const bagsRef = useRef<HTMLDivElement | null>(null);
   const checksRef = useRef<HTMLDivElement | null>(null);
@@ -43,7 +57,7 @@ export default function Dashboard() {
     []
   );
 
-  // Init (user + local)
+  // Init (user + localStorage)
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (!userData) {
@@ -52,14 +66,19 @@ export default function Dashboard() {
     }
     const u = JSON.parse(userData);
     setUser(u);
-    setTrips(JSON.parse(localStorage.getItem("trips") || "[]") || []);
-    setChecklists(JSON.parse(localStorage.getItem("checklists") || "[]") || []);
+
+    const lsTrips = JSON.parse(localStorage.getItem("trips") || "[]");
+    setTrips(Array.isArray(lsTrips) ? lsTrips : []);
+
+    const lsCks = JSON.parse(localStorage.getItem("checklists") || "[]");
+    setChecklists(Array.isArray(lsCks) ? lsCks : []);
   }, [router]);
 
-  // Fetch sacs
+  // Fetch sacs depuis Prisma API
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
+
     (async () => {
       try {
         setLoadingPackages(true);
@@ -72,17 +91,18 @@ export default function Dashboard() {
         if (!cancelled) setLoadingPackages(false);
       }
     })();
+
     return () => {
       cancelled = true;
     };
   }, [user?.id]);
 
-  // Refetch auto après création / MAJ d’un sac (événements issus de BagModal)
+  // Auto-refetch sacs après création / update (événements émis par BagModal)
   useEffect(() => {
     const refetch = async (userId?: number) => {
       if (!userId) return;
+      setLoadingPackages(true);
       try {
-        setLoadingPackages(true);
         const res = await fetch(`/api/packages?userId=${userId}`, { cache: "no-store" });
         const data = await res.json();
         setPackagesList(Array.isArray(data.packages) ? data.packages : []);
@@ -92,6 +112,7 @@ export default function Dashboard() {
     };
     const onCreated = () => refetch(user?.id);
     const onUpdated = () => refetch(user?.id);
+
     window.addEventListener("packsmart:bag:created", onCreated);
     window.addEventListener("packsmart:bag:updated", onUpdated);
     return () => {
@@ -100,17 +121,21 @@ export default function Dashboard() {
     };
   }, [user?.id]);
 
-  // KPI dynamiques
+  // KPI dynamiques (✅ maintenant on compte TOUTES les checklists)
   useEffect(() => {
     setStats({
       totalTrips: trips.length,
       totalPackages: packagesList.length,
-      // Modif : total checklists créées (pas seulement celles cochées)
-      completedChecklists: checklists.length,
+      completedChecklists: checklists.length, // ← CHANGEMENT : plus le total "faites", mais le total tout court
     });
   }, [trips, packagesList, checklists]);
 
-  // Modales
+  // Navigation douce
+  const goToTrips = () => tripsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const goToBags = () => bagsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const goToChecks = () => checksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // Gestion modales avec historique (popstate pour fermer au back)
   const handlePopstateOnce = () => setModal(null);
   const openModal = (type: Exclude<ModalType, null>) => {
     setModal(type);
@@ -120,54 +145,87 @@ export default function Dashboard() {
     } catch {}
   };
   const closeModal = () => {
+    // reset les éditions
+    setEditingTrip(null);
+    setEditingBag(null);
+    setEditingChecklist(null);
+
     try {
+      // si aucun state, fallback
       window.history.back();
     } catch {
       setModal(null);
     }
   };
 
-  // Actions
-  const goToTrips = () => tripsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const goToBags = () => bagsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const goToChecks = () => checksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Création côté TripModal
   const handleTripCreated = () => {
     const list = JSON.parse(localStorage.getItem("trips") || "[]");
     setTrips(Array.isArray(list) ? list : []);
   };
-  const handleChecklistCreate = (payload: { title: string; prefill?: boolean }) => {
-  const newChecklist = { id: Date.now(), name: (payload.title || "Nouvelle checklist").trim(), done: false };
-  const next = [newChecklist, ...checklists];
-  setChecklists(next);
-  localStorage.setItem("checklists", JSON.stringify(next));
-};
 
-  // [ADD] SUPPRESSION — voyages (localStorage)
-  const handleDeleteTrip = (id: number) => {
-    if (!confirm("Supprimer ce voyage ?")) return;
-    const next = trips.filter((t: any) => t.id !== id);
-    setTrips(next);
-    localStorage.setItem("trips", JSON.stringify(next));
-  };
-
-  // [ADD] SUPPRESSION — checklists (localStorage)
-  const handleDeleteChecklist = (id: number) => {
-    if (!confirm("Supprimer cette checklist ?")) return;
-    const next = checklists.filter((c: any) => c.id !== id);
+  // Création rapide côté ChecklistModal (utilisé si tu choisis onCreate direct)
+  const handleChecklistCreate = ({ title, prefill }: { title: string; prefill?: boolean }) => {
+    const newChecklist: Checklist = {
+      id: Date.now(),
+      name: (title || "Nouvelle checklist").trim(),
+      done: false,
+    };
+    const next = [newChecklist, ...checklists];
     setChecklists(next);
     localStorage.setItem("checklists", JSON.stringify(next));
   };
 
-  // [ADD] SUPPRESSION — sacs (API + state)
+  // Suppressions
+  const handleDeleteTrip = (id: number) => {
+    if (!confirm("Supprimer ce voyage ?")) return;
+    const next = trips.filter((t) => t.id !== id);
+    setTrips(next);
+    localStorage.setItem("trips", JSON.stringify(next));
+  };
+
+  const handleDeleteChecklist = (id: number) => {
+    if (!confirm("Supprimer cette checklist ?")) return;
+    const next = checklists.filter((c) => c.id !== id);
+    setChecklists(next);
+    localStorage.setItem("checklists", JSON.stringify(next));
+  };
+
   const handleDeleteBag = async (id: number) => {
     if (!confirm("Supprimer ce sac ?")) return;
     try {
       const res = await fetch(`/api/packages/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("DELETE failed");
-      setPackagesList((prev) => prev.filter((b: any) => b.id !== id));
+      setPackagesList((prev) => prev.filter((b) => b.id !== id));
     } catch {
       alert("Suppression impossible pour le moment.");
     }
+  };
+
+  // Éditions (ouvrent la modale en mode édition)
+  const handleEditTrip = (id: number) => {
+    const t = trips.find((x) => x.id === id) || null;
+    setEditingTrip(t);
+    openModal("trip");
+  };
+
+  const handleEditBag = (id: number) => {
+    const b = packagesList.find((x) => x.id === id) || null;
+    setEditingBag(b);
+    openModal("bag");
+  };
+
+  const handleEditChecklist = (id: number) => {
+    const c = checklists.find((x) => x.id === id) || null;
+    setEditingChecklist(c);
+    openModal("checklist");
+  };
+
+  // Toggle checklist.done
+  const handleToggleChecklist = (id: number) => {
+    const next = checklists.map((x) => (x.id === id ? { ...x, done: !x.done } : x));
+    setChecklists(next);
+    localStorage.setItem("checklists", JSON.stringify(next));
   };
 
   if (!user) {
@@ -249,15 +307,15 @@ export default function Dashboard() {
               <p className="text-textSoft/70 mb-6 leading-relaxed">Créez et gérez vos listes pour chaque voyage</p>
               <button className={btnRose} onClick={() => openModal("checklist")}>Créer une checklist</button>
             </div>
-
           </div>
 
-          {/* Sections découpées */}
+          {/* Sections */}
           <TripsSection
             sectionRef={tripsRef}
             trips={trips}
             onOpenCreate={() => openModal("trip")}
-            onDeleteTrip={handleDeleteTrip}        // [ADD]
+            onDeleteTrip={handleDeleteTrip}
+            onEditTrip={handleEditTrip}
           />
 
           <BagsSection
@@ -265,20 +323,20 @@ export default function Dashboard() {
             loading={loadingPackages}
             bags={packagesList}
             onOpenCreate={() => openModal("bag")}
-            onDeleteBag={handleDeleteBag}          // [ADD]
+            onDeleteBag={handleDeleteBag}
+            onEditBag={handleEditBag}
           />
 
           <ChecklistSection
             sectionRef={checksRef}
             checklists={checklists}
-            // Modif : ouvrir le modal au lieu de créer direct
-            onAdd={() => openModal("checklist")}
-            onToggle={(id) => {
-              const next = checklists.map((x) => (x.id === id ? { ...x, done: !x.done } : x));
-              setChecklists(next);
-              localStorage.setItem("checklists", JSON.stringify(next));
+            onAdd={() => {
+              setEditingChecklist(null); // création
+              openModal("checklist");
             }}
-            onDeleteChecklist={handleDeleteChecklist} // [ADD]
+            onToggle={handleToggleChecklist}
+            onDeleteChecklist={handleDeleteChecklist}
+            onEditChecklist={handleEditChecklist}
           />
 
           {/* Astuce */}
@@ -295,9 +353,40 @@ export default function Dashboard() {
       </main>
 
       {/* Modales */}
-      <TripModal open={modal === "trip"} onClose={closeModal} onCreated={handleTripCreated} />
-      <BagModal open={modal === "bag"} onClose={closeModal} />
-      <ChecklistModal open={modal === "checklist"} onClose={closeModal} onCreate={handleChecklistCreate} />
+      <TripModal
+        open={modal === "trip"}
+        onClose={closeModal}
+        // Création: le modal écrira lui-même dans localStorage et émettra éventuellement un event
+        onCreated={handleTripCreated}
+        editTrip={editingTrip || undefined}
+        // ← si ton TripModal a un onUpdated, tu peux rafraîchir localStorage ici:
+        // onUpdated={handleTripCreated}
+      />
+
+      <BagModal
+        open={modal === "bag"}
+        onClose={closeModal}
+        editBag={editingBag || undefined}
+        // BagModal devrait déjà émettre packsmart:bag:created|updated qu’on écoute plus haut
+      />
+
+      <ChecklistModal
+        open={modal === "checklist"}
+        onClose={closeModal}
+        editChecklist={editingChecklist || undefined}
+        onCreate={({ title, prefill, done }: { title: string; prefill?: boolean; done?: boolean }) => {
+          const newItem: Checklist = { id: Date.now(), name: (title || "Checklist").trim(), done: !!done };
+          const next = [newItem, ...checklists];
+          setChecklists(next);
+          localStorage.setItem("checklists", JSON.stringify(next));
+        }}
+        onUpdate={(updated: Checklist) => {
+          const next = checklists.map((c) => (c.id === updated.id ? updated : c));
+          setChecklists(next);
+          localStorage.setItem("checklists", JSON.stringify(next));
+        }}
+      />
+
       <Footer />
     </div>
   );
