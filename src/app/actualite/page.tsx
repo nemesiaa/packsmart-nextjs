@@ -98,7 +98,45 @@ export default function Actualite() {
     if (raw) setUser(JSON.parse(raw));
   }, []);
 
-  // Load posts from API
+  // Fonction pour récupérer les posts depuis l'API
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch('/api/posts');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.ok && data.posts) {
+          const adaptedPosts = data.posts.map((apiPost: any) => ({
+            id: apiPost.id.toString(),
+            authorEmail: apiPost.userEmail,
+            authorName: apiPost.userName || apiPost.userEmail,
+            createdAt: new Date(apiPost.createdAt).getTime(),
+            title: apiPost.description || "Post sans titre",
+            destination: undefined,
+            startDate: undefined,
+            endDate: undefined,
+            description: apiPost.description,
+            photoDataUrl: apiPost.imageData,
+            bagIds: [],
+            bagNames: [],
+          }));
+          setPosts(adaptedPosts);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des posts:', error);
+      const raw = localStorage.getItem(LS_POSTS);
+      if (raw) {
+        try {
+          const arr: Post[] = JSON.parse(raw);
+          setPosts(arr.sort((a, b) => b.createdAt - a.createdAt));
+        } catch {
+          setPosts([]);
+        }
+      }
+    }
+  };
+
+  // Load posts
   useEffect(() => {
     fetchPosts();
   }, []);
@@ -201,46 +239,6 @@ export default function Actualite() {
     localStorage.setItem(LS_POSTS, JSON.stringify(arr));
   };
 
-  // Fonction pour récupérer les posts depuis l'API
-  const fetchPosts = async () => {
-    try {
-      const response = await fetch('/api/posts');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.ok && data.posts) {
-          // Adapter le format des posts de l'API vers le format local
-          const adaptedPosts = data.posts.map((apiPost: any) => ({
-            id: apiPost.id.toString(),
-            authorEmail: apiPost.userEmail,
-            authorName: apiPost.userName || apiPost.userEmail,
-            createdAt: new Date(apiPost.createdAt).getTime(),
-            title: apiPost.description || "Post sans titre",
-            destination: undefined,
-            startDate: undefined,
-            endDate: undefined,
-            description: apiPost.description,
-            photoDataUrl: apiPost.imageData,
-            bagIds: [],
-            bagNames: [],
-          }));
-          setPosts(adaptedPosts);
-        }
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des posts:', error);
-      // Fallback vers localStorage en cas d'erreur
-      const raw = localStorage.getItem(LS_POSTS);
-      if (raw) {
-        try {
-          const arr: Post[] = JSON.parse(raw);
-          setPosts(arr.sort((a, b) => b.createdAt - a.createdAt));
-        } catch {
-          setPosts([]);
-        }
-      }
-    }
-  };
-
   const createPost = async () => {
     if (!canSubmit || !user) {
       setOpenForm(false);
@@ -248,12 +246,11 @@ export default function Actualite() {
     }
 
     try {
-      // Préparer les données pour l'API
       const postData = {
         userEmail: user.email,
         userName: user.name || user.email,
-        userAvatar: null, // Tu peux ajouter l'avatar plus tard si besoin
-        imageData: photoDataUrl,
+        userAvatar: null,
+        imageData: photoDataUrl || '',
         description: title.trim() + (description.trim() ? `\n\n${description.trim()}` : ''),
       };
 
@@ -268,7 +265,6 @@ export default function Actualite() {
       if (response.ok) {
         const result = await response.json();
         if (result.ok) {
-          // Recharger tous les posts depuis l'API
           await fetchPosts();
           resetForm();
           setOpenForm(false);
@@ -286,12 +282,38 @@ export default function Actualite() {
     }
   };
 
-  const removePost = (id: string) => {
+  const removePost = async (id: string) => {
     const p = posts.find((x) => x.id === id);
     if (!p) return;
-    // uniquement l’auteur peut supprimer
-    if (!user || user.email !== p.authorEmail) return;
-    savePosts(posts.filter((x) => x.id !== id));
+    
+    if (!user || user.email !== p.authorEmail) {
+      alert('Vous ne pouvez supprimer que vos propres posts.');
+      return;
+    }
+
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce post ?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/posts/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.ok) {
+          await fetchPosts();
+        } else {
+          alert('Erreur lors de la suppression: ' + result.error);
+        }
+      } else {
+        alert('Erreur lors de la suppression du post');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur de connexion lors de la suppression');
+    }
   };
 
   return (

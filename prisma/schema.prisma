@@ -79,7 +79,7 @@ model Post {
   userEmail   String
   userName    String?
   userAvatar  String?   // data URL ou URL publique
-  imageData   String    // data URL (base64) ou URL (si plus tard tu passes par Scaleway Object Storage)
+  imageData   String?    // data URL (base64) ou URL (si plus tard tu passes par Scaleway Object Storage)
   description String?
 
   // relation optionnelle
