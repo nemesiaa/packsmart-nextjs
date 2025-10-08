@@ -1,12 +1,13 @@
+// src/app/api/posts/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     
     // Vérifier que l'ID est fourni et est numérique
     if (!id || isNaN(Number(id))) {
