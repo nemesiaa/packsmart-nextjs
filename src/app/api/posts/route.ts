@@ -1,44 +1,32 @@
-// src/app/api/posts/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
-
-export async function GET() {
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const posts = await prisma.post.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    });
-    return NextResponse.json({ ok: true, posts });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ ok: false, error: "Erreur serveur" }, { status: 500 });
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { userEmail, userName, userAvatar, imageData, description } = body || {};
-
-    if (!userEmail || !imageData) {
-      return NextResponse.json({ ok: false, error: "Champs requis manquants." }, { status: 400 });
+    const { id } = await params;
+    
+    // Vérifier que l'ID est fourni et est numérique
+    if (!id || isNaN(Number(id))) {
+      return NextResponse.json({ ok: false, error: "ID invalide" }, { status: 400 });
     }
 
-    const post = await prisma.post.create({
-      data: {
-        userEmail,
-        userName: userName || null,
-        userAvatar: userAvatar || null,
-        imageData,
-        description: description || null,
-      },
+    // Supprimer le post
+    const deletedPost = await prisma.post.delete({
+      where: { id: Number(id) },
     });
 
-    return NextResponse.json({ ok: true, post });
-  } catch (e) {
-    console.error(e);
+    return NextResponse.json({ ok: true, deletedPost });
+  } catch (error: any) {
+    console.error('Erreur suppression post:', error);
+    
+    // Si le post n'existe pas
+    if (error.code === 'P2025') {
+      return NextResponse.json({ ok: false, error: "Post non trouvé" }, { status: 404 });
+    }
+    
     return NextResponse.json({ ok: false, error: "Erreur serveur" }, { status: 500 });
   }
-}
+} 
