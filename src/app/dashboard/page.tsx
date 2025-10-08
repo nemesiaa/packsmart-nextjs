@@ -360,7 +360,7 @@ export default function Dashboard() {
         onCreated={handleTripCreated}
         editTrip={editingTrip || undefined}
         // ← si ton TripModal a un onUpdated, tu peux rafraîchir localStorage ici:
-        // onUpdated={handleTripCreated}
+        onUpdated={handleTripCreated}
       />
 
       <BagModal

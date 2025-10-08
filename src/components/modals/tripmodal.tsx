@@ -1,15 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/modal";
+
+type EditTrip = { id: number; destination: string; startDate: string; endDate: string; notes?: string };
 
 export default function TripModal({
   open,
   onClose,
   onCreated,            // optionnel: pour mettre à jour le dashboard
+  editTrip,             // si défini => mode édition
+  onUpdated,            // callback après update
 }: {
   open: boolean;
   onClose: () => void;
   onCreated?: (trip: any) => void;
+  editTrip?: EditTrip | null;
+  onUpdated?: () => void;
 }) {
   const [destination, setDestination] = useState("");
   const [start, setStart]             = useState("");
@@ -17,18 +23,51 @@ export default function TripModal({
   const [notes, setNotes]             = useState("");
   const [saving, setSaving]           = useState(false);
 
+  // Remplir les champs si on édite un voyage existant
+  useEffect(() => {
+    if (editTrip) {
+      setDestination(editTrip.destination || "");
+      setStart(editTrip.startDate || "");
+      setEnd(editTrip.endDate || "");
+      setNotes(editTrip.notes || "");
+    } else {
+      // Reset pour création
+      setDestination("");
+      setStart("");
+      setEnd("");
+      setNotes("");
+    }
+  }, [editTrip, open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saving) return;
     setSaving(true);
     try {
-      // TODO: remplace par ton vrai appel API quand tu seras prêt(e)
-      // Fallback de démo: on enregistre dans localStorage puis on ferme.
-      const trip = { id: Date.now(), destination, startDate: start, endDate: end, notes };
       const list = JSON.parse(localStorage.getItem("trips") || "[]");
-      list.push(trip);
-      localStorage.setItem("trips", JSON.stringify(list));
-      onCreated?.(trip);
+      
+      if (editTrip) {
+        // Mode édition: trouver et mettre à jour le voyage existant
+        const updatedTrip = { 
+          ...editTrip, 
+          destination, 
+          startDate: start, 
+          endDate: end, 
+          notes 
+        };
+        const index = list.findIndex((t: any) => t.id === editTrip.id);
+        if (index !== -1) {
+          list[index] = updatedTrip;
+        }
+        localStorage.setItem("trips", JSON.stringify(list));
+        onUpdated?.();
+      } else {
+        // Mode création: ajouter un nouveau voyage
+        const trip = { id: Date.now(), destination, startDate: start, endDate: end, notes };
+        list.push(trip);
+        localStorage.setItem("trips", JSON.stringify(list));
+        onCreated?.(trip);
+      }
       onClose();
     } finally {
       setSaving(false);
@@ -36,7 +75,7 @@ export default function TripModal({
   };
 
   return (
-    <Modal open={open} title="Créer un voyage" onClose={onClose}>
+    <Modal open={open} title={editTrip ? "Modifier le voyage" : "Créer un voyage"} onClose={onClose}>
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="block text-sm mb-1">Destination</label>
