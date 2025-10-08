@@ -69,3 +69,18 @@ model PackageItem {
   @@index([packageId])
   @@index([itemId])
 }
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  userId      Int?
+  userEmail   String
+  userName    String?
+  userAvatar  String?   // data URL ou URL publique
+  imageData   String    // data URL (base64) ou URL (si plus tard tu passes par Scaleway Object Storage)
+  description String?
+
+  // relation optionnelle
+  user        User?     @relation(fields: [userId], references: [id])
+  // si user.id est Int ; adapte si c'est String/UUID
+}

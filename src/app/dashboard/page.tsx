@@ -277,7 +277,7 @@ export default function Dashboard() {
             <button onClick={goToChecks} className="kpi kpi--plum p-6 text-left">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="kpi__label">Checklists</p>
+                  <p className="kpi__label">Checklists (faites)</p>
                   <p className="kpi__num">{stats.completedChecklists}</p>
                 </div>
                 <div className="text-4xl opacity-90">📋</div>
