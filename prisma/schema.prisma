@@ -20,6 +20,8 @@ model User {
 
   // 1-N : un user possède plusieurs packages
   packages Package[]
+
+  posts    Post[]
 }
 
 model Package {
