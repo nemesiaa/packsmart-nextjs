@@ -98,17 +98,9 @@ export default function Actualite() {
     if (raw) setUser(JSON.parse(raw));
   }, []);
 
-  // Load posts
+  // Load posts from API
   useEffect(() => {
-    const raw = localStorage.getItem(LS_POSTS);
-    if (raw) {
-      try {
-        const arr: Post[] = JSON.parse(raw);
-        setPosts(arr.sort((a, b) => b.createdAt - a.createdAt));
-      } catch {
-        setPosts([]);
-      }
-    }
+    fetchPosts();
   }, []);
 
   // Load bags (hyper-tolérant : plusieurs clés/format + tentative API optionnelle)
@@ -209,30 +201,89 @@ export default function Actualite() {
     localStorage.setItem(LS_POSTS, JSON.stringify(arr));
   };
 
-  const createPost = () => {
+  // Fonction pour récupérer les posts depuis l'API
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch('/api/posts');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.ok && data.posts) {
+          // Adapter le format des posts de l'API vers le format local
+          const adaptedPosts = data.posts.map((apiPost: any) => ({
+            id: apiPost.id.toString(),
+            authorEmail: apiPost.userEmail,
+            authorName: apiPost.userName || apiPost.userEmail,
+            createdAt: new Date(apiPost.createdAt).getTime(),
+            title: apiPost.description || "Post sans titre",
+            destination: undefined,
+            startDate: undefined,
+            endDate: undefined,
+            description: apiPost.description,
+            photoDataUrl: apiPost.imageData,
+            bagIds: [],
+            bagNames: [],
+          }));
+          setPosts(adaptedPosts);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des posts:', error);
+      // Fallback vers localStorage en cas d'erreur
+      const raw = localStorage.getItem(LS_POSTS);
+      if (raw) {
+        try {
+          const arr: Post[] = JSON.parse(raw);
+          setPosts(arr.sort((a, b) => b.createdAt - a.createdAt));
+        } catch {
+          setPosts([]);
+        }
+      }
+    }
+  };
+
+  const createPost = async () => {
     if (!canSubmit || !user) {
       setOpenForm(false);
       return;
     }
-    const chosen = bags.filter((b) => selectedBagIds.includes(b.id));
-    const p: Post = {
-      id: crypto.randomUUID(),
-      authorEmail: user.email,
-      authorName: user.name,
-      createdAt: Date.now(),
-      title: title.trim(),
-      destination: destination.trim() || undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      description: description.trim() || undefined,
-      photoDataUrl,
-      bagIds: chosen.map((b) => b.id),
-      bagNames: chosen.map((b) => b.name),
-    };
-    const next = [p, ...posts];
-    savePosts(next);
-    resetForm();
-    setOpenForm(false);
+
+    try {
+      // Préparer les données pour l'API
+      const postData = {
+        userEmail: user.email,
+        userName: user.name || user.email,
+        userAvatar: null, // Tu peux ajouter l'avatar plus tard si besoin
+        imageData: photoDataUrl,
+        description: title.trim() + (description.trim() ? `\n\n${description.trim()}` : ''),
+      };
+
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.ok) {
+          // Recharger tous les posts depuis l'API
+          await fetchPosts();
+          resetForm();
+          setOpenForm(false);
+        } else {
+          console.error('Erreur API:', result.error);
+          alert('Erreur lors de la publication: ' + result.error);
+        }
+      } else {
+        console.error('Erreur HTTP:', response.status);
+        alert('Erreur lors de la publication');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création du post:', error);
+      alert('Erreur de connexion lors de la publication');
+    }
   };
 
   const removePost = (id: string) => {
